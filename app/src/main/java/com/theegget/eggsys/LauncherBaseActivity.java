@@ -13,7 +13,6 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
-import org.json.JSONObject;
 
 public abstract class LauncherBaseActivity extends Activity {
     private static final String HOST = "web-egget-system.base44.app";

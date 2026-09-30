@@ -319,6 +319,16 @@ public class ManagerActivity extends Activity {
         overlayButton.setOnClickListener(v -> openOverlaySettings());
         content.addView(overlayButton);
 
+        Button systemSettingsButton = new Button(this);
+        systemSettingsButton.setText("Allow modify system settings");
+        systemSettingsButton.setOnClickListener(v -> openWriteSettings());
+        content.addView(systemSettingsButton);
+
+        Button lockScreenButton = new Button(this);
+        lockScreenButton.setText("Disable lock screen");
+        lockScreenButton.setOnClickListener(v -> disableKeyguard());
+        content.addView(lockScreenButton);
+
         Switch overlay = new Switch(this);
         overlay.setText("Show Manager button at top of screen");
         overlay.setTextSize(17);
@@ -353,8 +363,26 @@ public class ManagerActivity extends Activity {
     private void disableKeyguard() {
         DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
-        if (dpm == null || !dpm.isAdminActive(admin)) return;
+        if (dpm == null) return;
+        if (!dpm.isAdminActive(admin)) {
+            requestDeviceAdmin();
+            return;
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 23 && !Settings.System.canWrite(this)) {
+            openWriteSettings();
+            return;
+        }
         try { dpm.setKeyguardDisabled(admin, true); } catch (SecurityException ignored) {}
+    }
+
+    private void openWriteSettings() {
+        if (android.os.Build.VERSION.SDK_INT < 23) return;
+        try {
+            startActivity(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
+                Uri.parse("package:" + getPackageName())));
+        } catch (Exception ignored) {
+            try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception ignoredAgain) {}
+        }
     }
 
     private void openOverlaySettings() {
@@ -420,21 +448,19 @@ public class ManagerActivity extends Activity {
         }
     }
 
-    @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN && event.getRepeatCount() == 0) {
-            volumeDownHeld = true;
-            bootSettingsOpened = false;
-            volumeHandler.postDelayed(bootSettingsAction, BOOT_SETTINGS_HOLD_MS);
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event != null && event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+                volumeDownHeld = true;
+                bootSettingsOpened = false;
+                volumeHandler.removeCallbacks(bootSettingsAction);
+                volumeHandler.postDelayed(bootSettingsAction, BOOT_SETTINGS_HOLD_MS);
+            } else if (event.getAction() == KeyEvent.ACTION_UP) {
+                volumeDownHeld = false;
+                volumeHandler.removeCallbacks(bootSettingsAction);
+            }
         }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            volumeDownHeld = false;
-            volumeHandler.removeCallbacks(bootSettingsAction);
-        }
-        return super.onKeyUp(keyCode, event);
+        return super.dispatchKeyEvent(event);
     }
 
     @Override protected void onPause() {

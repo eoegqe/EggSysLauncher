@@ -17,6 +17,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (!getPreferences(MODE_PRIVATE).getBoolean("first_run_done", false)) {
+            getPreferences(MODE_PRIVATE).edit().putBoolean("first_run_done", true).apply();
+            launchMode("com.theegget.eggsys.launcher1");
+        }
         showSettings();
     }
 

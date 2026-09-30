@@ -23,7 +23,7 @@
         <activity
             android:name=".LauncherMode1Activity"
             android:exported="true"
-            android:enabled="true"
+            android:enabled="false"
             android:launchMode="singleTask"
             android:label="@string/mode1_name"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">

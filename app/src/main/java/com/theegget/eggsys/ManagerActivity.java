@@ -3,6 +3,8 @@ package com.theegget.eggsys;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.Context;
+import android.text.TextUtils;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -130,10 +132,47 @@ public class ManagerActivity extends Activity {
         content.addView(heading);
 
         TextView info = new TextView(this);
-        info.setText("EggSys Manager settings.");
+        info.setText("EggSys Manager settings and shortcuts.");
         info.setTextSize(17);
         info.setPadding(0, 20, 0, 20);
         content.addView(info);
+
+        Switch overlay = new Switch(this);
+        overlay.setText("Show Manager button at top of screen");
+        overlay.setTextSize(17);
+        overlay.setChecked(getPreferences(0).getBoolean("manager_overlay_enabled", false));
+        overlay.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            getPreferences(0).edit().putBoolean("manager_overlay_enabled", isChecked).apply();
+            if (!isAccessibilityServiceEnabled()) {
+                try {
+                    startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+                } catch (Exception ignored) {}
+            }
+        });
+        content.addView(overlay);
+
+        Switch volume = new Switch(this);
+        volume.setText("Volume Up + Volume Down shortcut");
+        volume.setTextSize(17);
+        volume.setChecked(getPreferences(0).getBoolean(VOLUME_SHORTCUT, true));
+        volume.setOnCheckedChangeListener((buttonView, isChecked) ->
+            getPreferences(0).edit().putBoolean(VOLUME_SHORTCUT, isChecked).apply());
+        content.addView(volume);
+
+        TextView shortcutInfo = new TextView(this);
+        shortcutInfo.setText("The accessibility service can provide the on-screen Manager button and a global Volume Up + Volume Down shortcut.");
+        shortcutInfo.setTextSize(15);
+        shortcutInfo.setPadding(0, 8, 0, 12);
+        content.addView(shortcutInfo);
+
+        Button accessibilitySettings = new Button(this);
+        accessibilitySettings.setText("Open Accessibility settings");
+        accessibilitySettings.setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            } catch (Exception ignored) {}
+        });
+        content.addView(accessibilitySettings);
 
         Button androidSettings = new Button(this);
         androidSettings.setText("Open Android Home settings");
@@ -145,6 +184,14 @@ public class ManagerActivity extends Activity {
             }
         });
         content.addView(androidSettings);
+    }
+
+    private boolean isAccessibilityServiceEnabled() {
+        String enabled = Settings.Secure.getString(
+            getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+        if (enabled == null) return false;
+        ComponentName service = new ComponentName(this, ManagerAccessibilityService.class);
+        return enabled.toLowerCase().contains(service.flattenToString().toLowerCase());
     }
 
     private void switchMode(int mode) {

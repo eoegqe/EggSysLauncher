@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
 
     <application
         android:label="@string/app_name"
@@ -15,10 +16,7 @@
         android:usesCleartextTraffic="false"
         android:allowBackup="false">
 
-        <activity
-            android:name=".ManagerActivity"
-            android:exported="true"
-            android:label="@string/app_name">
+        <activity android:name=".ManagerActivity" android:exported="true" android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,9 +27,7 @@
             android:name=".EggSysDeviceAdminReceiver"
             android:permission="android.permission.BIND_DEVICE_ADMIN"
             android:exported="true">
-            <meta-data
-                android:name="android.app.device_admin"
-                android:resource="@xml/device_admin" />
+            <meta-data android:name="android.app.device_admin" android:resource="@xml/device_admin" />
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
                 <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
@@ -46,9 +42,7 @@
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config" />
         </service>
 
         <service
@@ -59,17 +53,11 @@
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
-            <meta-data
-                android:name="android.view.im"
-                android:resource="@xml/method" />
+            <meta-data android:name="android.view.im" android:resource="@xml/method" />
         </service>
 
-        <activity
-            android:name=".LauncherMode1Activity"
-            android:exported="true"
-            android:enabled="false"
-            android:launchMode="singleTask"
-            android:label="@string/mode1_name"
+        <activity android:name=".LauncherMode1Activity" android:exported="true" android:enabled="false"
+            android:launchMode="singleTask" android:label="@string/mode1_name"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -84,12 +72,8 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".LauncherMode2Activity"
-            android:exported="true"
-            android:enabled="false"
-            android:launchMode="singleTask"
-            android:label="@string/mode2_name"
+        <activity android:name=".LauncherMode2Activity" android:exported="true" android:enabled="false"
+            android:launchMode="singleTask" android:label="@string/mode2_name"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

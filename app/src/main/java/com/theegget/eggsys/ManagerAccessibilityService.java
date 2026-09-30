@@ -1,6 +1,7 @@
 package com.theegget.eggsys;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -24,7 +25,11 @@ public class ManagerAccessibilityService extends AccessibilityService {
         }
     }
 
-    @Override public void onAccessibilityEvent(android.view.accessibility.AccessibilityEvent event) {}
+    @Override public void onAccessibilityEvent(android.view.accessibility.AccessibilityEvent event) {
+        boolean enabled = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(OVERLAY_ENABLED, false);
+        if (enabled) showButton();
+        else hideButton();
+    }
 
     @Override public void onInterrupt() {}
 
@@ -87,7 +92,9 @@ public class ManagerAccessibilityService extends AccessibilityService {
     }
 
     private void openManager() {
-        IntentHelper.openManager(this);
+        Intent intent = new Intent(this, ManagerActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 
     @Override public void onDestroy() {

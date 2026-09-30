@@ -19,7 +19,20 @@
             </intent-filter>
         </activity>
 
-        <!-- EggSys Launcher mode 1: hidden, enabled by default. -->
+        <service
+            android:name=".ManagerAccessibilityService"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="false"
+            android:label="EggSys Manager shortcut">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- EggSys Launcher mode 1: hidden, disabled by default. -->
         <activity
             android:name=".LauncherMode1Activity"
             android:exported="true"

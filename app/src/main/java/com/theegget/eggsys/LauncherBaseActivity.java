@@ -17,6 +17,9 @@ import android.widget.Toast;
 public abstract class LauncherBaseActivity extends Activity {
     private static final String HOST = "web-egget-system.base44.app";
     private static final String BASE_URL = "https://" + HOST + "/";
+    private boolean volumeUpDown;
+    private long volumeUpAt;
+    private long volumeDownAt;
     protected WebView webView;
 
     protected abstract int getMode();
@@ -77,6 +80,30 @@ public abstract class LauncherBaseActivity extends Activity {
             View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
             View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
             View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+    }
+
+    @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = true; volumeUpAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) { volumeDownAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = false; return true; }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) { return true; }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    private void checkVolumeShortcut() {
+        long now = System.currentTimeMillis();
+        if (volumeUpDown && now - volumeDownAt <= 350) openManager();
+        if (volumeUpDown && volumeDownAt != 0 && now - volumeUpAt <= 350) openManager();
+    }
+
+    private void openManager() {
+        volumeDownAt = 0;
+        volumeUpAt = 0;
+        try { startActivity(new Intent(this, ManagerActivity.class)); } catch (Exception ignored) {}
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {

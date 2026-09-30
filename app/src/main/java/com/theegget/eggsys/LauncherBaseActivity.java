@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.WindowInsets;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
@@ -28,19 +27,13 @@ public abstract class LauncherBaseActivity extends Activity {
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode =
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
+        }
         webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
         setContentView(webView);
-        webView.setOnApplyWindowInsetsListener((v, insets) -> {
-            int top = 0;
-            int bottom = 0;
-            if (android.os.Build.VERSION.SDK_INT >= 28 && insets.getDisplayCutout() != null) {
-                top = insets.getDisplayCutout().getSafeInsetTop();
-                bottom = insets.getDisplayCutout().getSafeInsetBottom();
-            }
-            v.setPadding(0, top, 0, bottom);
-            return insets;
-        });
         goImmersive();
 
         WebSettings s = webView.getSettings();

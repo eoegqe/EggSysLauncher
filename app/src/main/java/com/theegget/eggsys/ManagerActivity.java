@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.view.WindowInsets;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +59,14 @@ public class ManagerActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(32, 32, 32, 0);
+        root.setOnApplyWindowInsetsListener((v, insets) -> {
+            int top = 0;
+            if (android.os.Build.VERSION.SDK_INT >= 28 && insets.getDisplayCutout() != null) {
+                top = insets.getDisplayCutout().getSafeInsetTop();
+            }
+            v.setPadding(32, Math.max(32, top + 16), 32, 0);
+            return insets;
+        });
 
         TextView title = new TextView(this);
         title.setText("EggSys Manager");

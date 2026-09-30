@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">EggSys Manager</string>
+    <string name="mode1_name">EggSys Launcher mode 1</string>
+    <string name="mode2_name">EggSys Launcher mode 2</string>
+</resources>

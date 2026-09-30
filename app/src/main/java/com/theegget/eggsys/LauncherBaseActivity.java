@@ -21,6 +21,7 @@ public abstract class LauncherBaseActivity extends Activity {
     private long volumeUpAt;
     private long volumeDownAt;
     protected WebView webView;
+    private PasskeyBridge passkeyBridge;
 
     protected abstract int getMode();
     protected abstract String getPath();
@@ -35,6 +36,7 @@ public abstract class LauncherBaseActivity extends Activity {
         webView.setBackgroundColor(Color.BLACK);
         setContentView(webView);
         goImmersive();
+        passkeyBridge = new PasskeyBridge(this);
 
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
@@ -71,7 +73,34 @@ public abstract class LauncherBaseActivity extends Activity {
             startActivity(i);
             return true;
         }
+
         @JavascriptInterface public int mode() { return getMode(); }
+
+        /**
+         * Requests an Android passkey using Credential Manager. The website can
+         * call EggSysOS.getPasskey(publicKeyRequestJson) and receive its result
+         * through window.EggSysPasskeyResult(json, error).
+         */
+        @JavascriptInterface public void getPasskey(String requestJson) {
+            if (!isTrustedPage() || requestJson == null || requestJson.isEmpty()) return;
+            passkeyBridge.getPasskey(requestJson, new PasskeyBridge.ResultCallback() {
+                @Override public void success(String responseJson) {
+                    runOnUiThread(() -> {
+                        String js = "window.EggSysPasskeyResult(" +
+                                JSONObjectUtil.quote(responseJson) + ", null)";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+
+                @Override public void error(String message) {
+                    runOnUiThread(() -> {
+                        String js = "window.EggSysPasskeyResult(null, " +
+                                JSONObjectUtil.quote(message) + ")";
+                        webView.evaluateJavascript(js, null);
+                    });
+                }
+            });
+        }
     }
 
     private boolean isTrustedPage() {
@@ -88,66 +117,37 @@ public abstract class LauncherBaseActivity extends Activity {
 
     @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
         if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) {
-            return super.onKeyDown(keyCode, event);
-        }
-
+                .getBoolean("volume_shortcut_enabled", true)) return super.onKeyDown(keyCode, event);
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-            volumeUpDown = true;
-            volumeUpAt = System.currentTimeMillis();
-            checkVolumeShortcut();
-            return true;
+            volumeUpDown = true; volumeUpAt = System.currentTimeMillis(); checkVolumeShortcut(); return true;
         }
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
-            volumeDownAt = System.currentTimeMillis();
-            checkVolumeShortcut();
-            return true;
+            volumeDownAt = System.currentTimeMillis(); checkVolumeShortcut(); return true;
         }
         return super.onKeyDown(keyCode, event);
     }
 
     @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
         if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) {
-            return super.onKeyUp(keyCode, event);
-        }
-
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-            volumeUpDown = false;
-            return true;
-        }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
-            return true;
-        }
+                .getBoolean("volume_shortcut_enabled", true)) return super.onKeyUp(keyCode, event);
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = false; return true; }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) return true;
         return super.onKeyUp(keyCode, event);
     }
 
     private void checkVolumeShortcut() {
         long now = System.currentTimeMillis();
-        if (volumeUpDown && now - volumeDownAt <= 350) openManager();
-        if (volumeUpDown && volumeDownAt != 0 && now - volumeUpAt <= 350) openManager();
+        if (volumeUpDown && volumeDownAt != 0 && Math.abs(volumeUpAt - volumeDownAt) <= 350) openManager();
     }
 
     private void openManager() {
-        volumeDownAt = 0;
-        volumeUpAt = 0;
+        volumeDownAt = 0; volumeUpAt = 0;
         try { startActivity(new Intent(this, ManagerActivity.class)); } catch (Exception ignored) {}
     }
 
-    @Override public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) goImmersive();
-    }
-
-    @Override public void onBackPressed() {
-        if (webView.canGoBack()) webView.goBack();
-    }
-
-    @Override protected void onSaveInstanceState(Bundle out) {
-        super.onSaveInstanceState(out);
-        webView.saveState(out);
-    }
-
+    @Override public void onWindowFocusChanged(boolean hasFocus) { super.onWindowFocusChanged(hasFocus); if (hasFocus) goImmersive(); }
+    @Override public void onBackPressed() { if (webView.canGoBack()) webView.goBack(); }
+    @Override protected void onSaveInstanceState(Bundle out) { super.onSaveInstanceState(out); webView.saveState(out); }
     @Override protected void onPause() { super.onPause(); webView.onPause(); }
     @Override protected void onResume() { super.onResume(); webView.onResume(); }
 }

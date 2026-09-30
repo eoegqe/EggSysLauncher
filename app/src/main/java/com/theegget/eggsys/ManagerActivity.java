@@ -16,6 +16,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 public class ManagerActivity extends Activity {
+    private static final String PREFS = "eggsys_manager";
     private static final String VOLUME_SHORTCUT = "volume_shortcut_enabled";
 
     private ComponentName mode1;

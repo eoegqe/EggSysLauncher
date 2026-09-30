@@ -6,13 +6,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 
 public class ManagerActivity extends Activity {
+    private static final String PREFS = "eggsys_manager";
+    private static final String VOLUME_SHORTCUT = "volume_shortcut_enabled";
+
     private ComponentName mode1;
     private ComponentName mode2;
     private LinearLayout content;
@@ -40,10 +43,10 @@ public class ManagerActivity extends Activity {
 
         Button behaviorTab = new Button(this);
         behaviorTab.setText("Behavior");
-        Button launcherTab = new Button(this);
-        launcherTab.setText("Choose Launcher");
+        Button settingsTab = new Button(this);
+        settingsTab.setText("Settings");
         tabs.addView(behaviorTab, new LinearLayout.LayoutParams(0, -2, 1));
-        tabs.addView(launcherTab, new LinearLayout.LayoutParams(0, -2, 1));
+        tabs.addView(settingsTab, new LinearLayout.LayoutParams(0, -2, 1));
         root.addView(tabs);
 
         content = new LinearLayout(this);
@@ -60,7 +63,7 @@ public class ManagerActivity extends Activity {
         root.addView(androidSettings);
 
         behaviorTab.setOnClickListener(v -> showBehaviorTab());
-        launcherTab.setOnClickListener(v -> showLauncherTab());
+        settingsTab.setOnClickListener(v -> showSettingsTab());
 
         setContentView(root);
         showBehaviorTab();
@@ -70,51 +73,71 @@ public class ManagerActivity extends Activity {
         content.removeAllViews();
 
         TextView heading = new TextView(this);
-        heading.setText("Launcher behavior");
+        heading.setText("Behavior");
         heading.setTextSize(22);
         content.addView(heading);
 
-        TextView web = new TextView(this);
-        web.setText("Web — EggSys Launcher mode 1\nLoads the normal EggetSystem web interface.");
-        web.setTextSize(18);
-        web.setPadding(0, 24, 0, 24);
-        content.addView(web);
+        TextView description = new TextView(this);
+        description.setText("Choose which EggSys launcher is active. Only one launcher can be active at a time.");
+        description.setTextSize(17);
+        description.setPadding(0, 12, 0, 20);
+        content.addView(description);
 
-        TextView os = new TextView(this);
-        os.setText("OS — EggSys Launcher mode 2\nLoads the OS interface.");
-        os.setTextSize(18);
-        os.setPadding(0, 24, 0, 24);
-        content.addView(os);
+        status = new TextView(this);
+        status.setText("Current launcher: " + currentMode());
+        status.setTextSize(18);
+        status.setPadding(0, 0, 0, 20);
+        content.addView(status);
+
+        Button webButton = new Button(this);
+        webButton.setText("Activate Web");
+        webButton.setOnClickListener(v -> switchMode(1));
+        content.addView(webButton);
+
+        Button osButton = new Button(this);
+        osButton.setText("Activate OS");
+        osButton.setOnClickListener(v -> switchMode(2));
+        content.addView(osButton);
+
+        Button disableButton = new Button(this);
+        disableButton.setText("Deactivate Both");
+        disableButton.setOnClickListener(v -> disableBoth());
+        content.addView(disableButton);
+
+        TextView shortcutHeading = new TextView(this);
+        shortcutHeading.setText("Manager shortcut");
+        shortcutHeading.setTextSize(20);
+        shortcutHeading.setPadding(0, 28, 0, 8);
+        content.addView(shortcutHeading);
+
+        Switch shortcut = new Switch(this);
+        shortcut.setText("Volume Up + Volume Down");
+        shortcut.setTextSize(17);
+        shortcut.setChecked(getPreferences(0).getBoolean(VOLUME_SHORTCUT, true));
+        shortcut.setOnCheckedChangeListener((buttonView, isChecked) ->
+            getPreferences(0).edit().putBoolean(VOLUME_SHORTCUT, isChecked).apply());
+        content.addView(shortcut);
+
+        TextView shortcutInfo = new TextView(this);
+        shortcutInfo.setText("When enabled, pressing Volume Up and Volume Down together opens EggSys Manager.");
+        shortcutInfo.setTextSize(15);
+        shortcutInfo.setPadding(0, 4, 0, 0);
+        content.addView(shortcutInfo);
     }
 
-    private void showLauncherTab() {
+    private void showSettingsTab() {
         content.removeAllViews();
 
         TextView heading = new TextView(this);
-        heading.setText("Choose Launcher");
+        heading.setText("Settings");
         heading.setTextSize(22);
         content.addView(heading);
 
-        status = new TextView(this);
-        status.setText("Current: " + currentMode());
-        status.setTextSize(18);
-        status.setPadding(0, 20, 0, 20);
-        content.addView(status);
-
-        Button mode1Button = new Button(this);
-        mode1Button.setText("Activate EggSys Launcher mode 1 (Web)");
-        mode1Button.setOnClickListener(v -> switchMode(1));
-        content.addView(mode1Button);
-
-        Button mode2Button = new Button(this);
-        mode2Button.setText("Activate EggSys Launcher mode 2 (OS)");
-        mode2Button.setOnClickListener(v -> switchMode(2));
-        content.addView(mode2Button);
-
-        Button disableButton = new Button(this);
-        disableButton.setText("Deactivate both launchers");
-        disableButton.setOnClickListener(v -> disableBoth());
-        content.addView(disableButton);
+        TextView info = new TextView(this);
+        info.setText("EggSys Manager settings.");
+        info.setTextSize(17);
+        info.setPadding(0, 20, 0, 20);
+        content.addView(info);
     }
 
     private void switchMode(int mode) {
@@ -133,7 +156,8 @@ public class ManagerActivity extends Activity {
             home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startActivity(home);
         } catch (Exception ignored) {}
-        showLauncherTab();
+
+        showBehaviorTab();
     }
 
     private void disableBoth() {
@@ -141,12 +165,12 @@ public class ManagerActivity extends Activity {
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
         getPackageManager().setComponentEnabledSetting(mode2,
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-        showLauncherTab();
+        showBehaviorTab();
     }
 
     private String currentMode() {
-        if (isEnabled(mode1)) return "EggSys Launcher mode 1 (Web)";
-        if (isEnabled(mode2)) return "EggSys Launcher mode 2 (OS)";
+        if (isEnabled(mode1)) return "Web";
+        if (isEnabled(mode2)) return "OS";
         return "None";
     }
 

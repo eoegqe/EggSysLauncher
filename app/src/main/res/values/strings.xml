@@ -2,5 +2,7 @@
     <string name="app_name">EggSys Manager</string>
     <string name="mode1_name">EggSys Web</string>
     <string name="mode2_name">EggSys OS</string>
-    <string name="accessibility_service_description">Provides the optional EggSys Manager overlay button and Volume Up + Volume Down shortcut.</string>
+    <string name="accessibility_service_description">Monitors apps for EggSys blocking and can close blocked apps through Android Settings.</string>
+    <string name="keyboard_name">EggSys Keyboard</string>
+    <string name="keyboard_subtype">English (US)</string>
 </resources>

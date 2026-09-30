@@ -9,6 +9,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
@@ -36,8 +38,18 @@ public abstract class LauncherBaseActivity extends Activity {
     private static final int GEO_PERMISSION_REQUEST = 1002;
 
     private boolean volumeUpDown;
-    private long volumeUpAt;
-    private long volumeDownAt;
+    private boolean volumeShortcutTriggered;
+    private final Handler volumeHandler = new Handler(Looper.getMainLooper());
+    private final Runnable volumeUpLongPress = new Runnable() {
+        @Override public void run() {
+            if (volumeUpDown
+                    && getSharedPreferences("eggsys_manager", MODE_PRIVATE)
+                        .getBoolean("volume_shortcut_enabled", true)) {
+                volumeShortcutTriggered = true;
+                openManager();
+            }
+        }
+    };
     protected WebView webView;
 
     private PermissionRequest pendingWebPermissionRequest;
@@ -393,17 +405,17 @@ public abstract class LauncherBaseActivity extends Activity {
                 .getBoolean("volume_shortcut_enabled", true)) {
             return super.onKeyDown(keyCode, event);
         }
+
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-            volumeUpDown = true;
-            volumeUpAt = System.currentTimeMillis();
-            checkVolumeShortcut();
-            return true;
+            if (event.getRepeatCount() == 0) {
+                volumeUpDown = true;
+                volumeShortcutTriggered = false;
+                volumeHandler.postDelayed(volumeUpLongPress, 700);
+            }
+            // Do not consume the key: Android keeps normal volume control.
+            return super.onKeyDown(keyCode, event);
         }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
-            volumeDownAt = System.currentTimeMillis();
-            checkVolumeShortcut();
-            return true;
-        }
+
         return super.onKeyDown(keyCode, event);
     }
 
@@ -412,23 +424,21 @@ public abstract class LauncherBaseActivity extends Activity {
                 .getBoolean("volume_shortcut_enabled", true)) {
             return super.onKeyUp(keyCode, event);
         }
+
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
             volumeUpDown = false;
-            return true;
+            volumeHandler.removeCallbacks(volumeUpLongPress);
+            volumeShortcutTriggered = false;
+            // Do not consume the key: Android keeps normal volume control.
+            return super.onKeyUp(keyCode, event);
         }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) return true;
+
         return super.onKeyUp(keyCode, event);
     }
 
-    private void checkVolumeShortcut() {
-        long now = System.currentTimeMillis();
-        if (volumeUpDown && volumeDownAt != 0
-                && Math.abs(volumeUpAt - volumeDownAt) <= 350) openManager();
-    }
-
     private void openManager() {
-        volumeDownAt = 0;
-        volumeUpAt = 0;
+        volumeUpDown = false;
+        volumeHandler.removeCallbacks(volumeUpLongPress);
         try { startActivity(new Intent(this, ManagerActivity.class)); } catch (Exception ignored) {}
     }
 

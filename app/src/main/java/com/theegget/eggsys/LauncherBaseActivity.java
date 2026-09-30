@@ -101,9 +101,26 @@ public abstract class LauncherBaseActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
                 Uri u = req.getUrl();
-                if (HOST.equals(u.getHost())) return false;
+                String scheme = u.getScheme();
+                if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                    // EggSys handles normal web browsing itself. Chrome is not required.
+                    return false;
+                }
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
                 return true;
+            }
+
+            @Override public boolean shouldOverrideUrlLoading(WebView v, String url) {
+                if (url != null) {
+                    Uri u = Uri.parse(url);
+                    String scheme = u.getScheme();
+                    if ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) {
+                        return false;
+                    }
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) {}
+                    return true;
+                }
+                return false;
             }
 
             @Override public void onPageFinished(WebView view, String url) {

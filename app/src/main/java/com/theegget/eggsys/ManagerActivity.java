@@ -1,11 +1,13 @@
 package com.theegget.eggsys;
 
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.net.Uri;
 import android.Manifest;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -20,6 +22,7 @@ public class ManagerActivity extends Activity {
     private static final String PREFS = "eggsys_manager";
     private static final String VOLUME_SHORTCUT = "volume_shortcut_enabled";
     private static final int PERMISSION_REQUEST_CODE = 1001;
+    private static final int DEVICE_ADMIN_REQUEST = 1002;
 
     private ComponentName mode1;
     private ComponentName mode2;
@@ -137,7 +140,7 @@ public class ManagerActivity extends Activity {
         content.addView(shortcutHeading);
 
         Switch shortcut = new Switch(this);
-        shortcut.setText("Volume Up + Volume Down");
+        shortcut.setText("Hold Volume Up to open Manager");
         shortcut.setTextSize(17);
         shortcut.setChecked(getPreferences(0).getBoolean(VOLUME_SHORTCUT, true));
         shortcut.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -145,7 +148,7 @@ public class ManagerActivity extends Activity {
         content.addView(shortcut);
 
         TextView shortcutInfo = new TextView(this);
-        shortcutInfo.setText("When enabled, pressing Volume Up and Volume Down together opens EggSys Manager.");
+        shortcutInfo.setText("When enabled, holding Volume Up for a moment opens EggSys Manager. Normal volume control still works.");
         shortcutInfo.setTextSize(15);
         shortcutInfo.setPadding(0, 4, 0, 0);
         content.addView(shortcutInfo);
@@ -180,7 +183,7 @@ public class ManagerActivity extends Activity {
         content.addView(overlay);
 
         Switch volume = new Switch(this);
-        volume.setText("Volume Up + Volume Down shortcut");
+        volume.setText("Hold Volume Up to open Manager");
         volume.setTextSize(17);
         volume.setChecked(getPreferences(0).getBoolean(VOLUME_SHORTCUT, true));
         volume.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -188,7 +191,7 @@ public class ManagerActivity extends Activity {
         content.addView(volume);
 
         TextView shortcutInfo = new TextView(this);
-        shortcutInfo.setText("The accessibility service can provide the on-screen Manager button and a global Volume Up + Volume Down shortcut.");
+        shortcutInfo.setText("The Manager button uses overlay access, and holding Volume Up opens Manager while normal volume control remains available.");
         shortcutInfo.setTextSize(15);
         shortcutInfo.setPadding(0, 8, 0, 12);
         content.addView(shortcutInfo);
@@ -202,6 +205,22 @@ public class ManagerActivity extends Activity {
         });
         content.addView(accessibilitySettings);
 
+        Button adminButton = new Button(this);
+        adminButton.setText("Enable EggSys device administrator");
+        adminButton.setOnClickListener(v -> requestDeviceAdmin());
+        content.addView(adminButton);
+
+        Button overlayButton = new Button(this);
+        overlayButton.setText("Allow display over other apps");
+        overlayButton.setOnClickListener(v -> openOverlaySettings());
+        content.addView(overlayButton);
+
+        TextView permissionInfo = new TextView(this);
+        permissionInfo.setText("Device administrator is used for the EggSys lock-screen setting. Display over other apps is used for the on-screen Manager button.");
+        permissionInfo.setTextSize(15);
+        permissionInfo.setPadding(0, 8, 0, 12);
+        content.addView(permissionInfo);
+
         Button androidSettings = new Button(this);
         androidSettings.setText("Open Android Home settings");
         androidSettings.setOnClickListener(v -> {
@@ -212,6 +231,42 @@ public class ManagerActivity extends Activity {
             }
         });
         content.addView(androidSettings);
+    }
+
+    private void requestDeviceAdmin() {
+        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
+        if (dpm != null && dpm.isAdminActive(admin)) {
+            disableKeyguard();
+            return;
+        }
+        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
+        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
+            "EggSys uses device administrator access for its lock-screen setting.");
+        try {
+            startActivityForResult(intent, DEVICE_ADMIN_REQUEST);
+        } catch (Exception ignored) {}
+    }
+
+    private void disableKeyguard() {
+        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
+        if (dpm == null || !dpm.isAdminActive(admin)) return;
+        try {
+            dpm.setKeyguardDisabled(admin, true);
+        } catch (SecurityException ignored) {}
+    }
+
+    private void openOverlaySettings() {
+        try {
+            startActivity(new Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName())));
+        } catch (Exception ignored) {
+            try { startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)); }
+            catch (Exception ignoredAgain) {}
+        }
     }
 
     private boolean isAccessibilityServiceEnabled() {

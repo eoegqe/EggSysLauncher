@@ -83,14 +83,38 @@ public abstract class LauncherBaseActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = true; volumeUpAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) { volumeDownAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
+        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
+                .getBoolean("volume_shortcut_enabled", true)) {
+            return super.onKeyDown(keyCode, event);
+        }
+
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            volumeUpDown = true;
+            volumeUpAt = System.currentTimeMillis();
+            checkVolumeShortcut();
+            return true;
+        }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
+            volumeDownAt = System.currentTimeMillis();
+            checkVolumeShortcut();
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
     }
 
     @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = false; return true; }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) { return true; }
+        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
+                .getBoolean("volume_shortcut_enabled", true)) {
+            return super.onKeyUp(keyCode, event);
+        }
+
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
+            volumeUpDown = false;
+            return true;
+        }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
+            return true;
+        }
         return super.onKeyUp(keyCode, event);
     }
 

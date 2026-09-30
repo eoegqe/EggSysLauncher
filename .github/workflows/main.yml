@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APKs
 on:
   push:
   workflow_dispatch:
@@ -8,29 +8,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'cmdline-tools;latest build-tools;35.0.0 platforms;android-35'
-
       - name: Accept Android SDK Licenses
         run: |
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-
-      - name: Build debug APK
+      - name: Build all APKs
         run: gradle assembleDebug --no-daemon
-
       - uses: actions/upload-artifact@v4
         with:
-          name: EggSysOS-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: EggSys-APKs
+          path: |
+            manager/build/outputs/apk/debug/manager-debug.apk
+            launcher1/build/outputs/apk/debug/launcher1-debug.apk
+            launcher2/build/outputs/apk/debug/launcher2-debug.apk

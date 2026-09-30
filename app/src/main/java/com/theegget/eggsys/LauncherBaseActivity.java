@@ -13,6 +13,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+import org.json.JSONObject;
 
 public abstract class LauncherBaseActivity extends Activity {
     private static final String HOST = "web-egget-system.base44.app";
@@ -76,28 +77,16 @@ public abstract class LauncherBaseActivity extends Activity {
 
         @JavascriptInterface public int mode() { return getMode(); }
 
-        /**
-         * Requests an Android passkey using Credential Manager. The website can
-         * call EggSysOS.getPasskey(publicKeyRequestJson) and receive its result
-         * through window.EggSysPasskeyResult(json, error).
-         */
         @JavascriptInterface public void getPasskey(String requestJson) {
             if (!isTrustedPage() || requestJson == null || requestJson.isEmpty()) return;
             passkeyBridge.getPasskey(requestJson, new PasskeyBridge.ResultCallback() {
                 @Override public void success(String responseJson) {
-                    runOnUiThread(() -> {
-                        String js = "window.EggSysPasskeyResult(" +
-                                JSONObjectUtil.quote(responseJson) + ", null)";
-                        webView.evaluateJavascript(js, null);
-                    });
+                    runOnUiThread(() -> webView.evaluateJavascript(
+                        "window.EggSysPasskeyResult(" + JSONObject.quote(responseJson) + ", null)", null));
                 }
-
                 @Override public void error(String message) {
-                    runOnUiThread(() -> {
-                        String js = "window.EggSysPasskeyResult(null, " +
-                                JSONObjectUtil.quote(message) + ")";
-                        webView.evaluateJavascript(js, null);
-                    });
+                    runOnUiThread(() -> webView.evaluateJavascript(
+                        "window.EggSysPasskeyResult(null, " + JSONObject.quote(message) + ")", null));
                 }
             });
         }
@@ -116,20 +105,14 @@ public abstract class LauncherBaseActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) return super.onKeyDown(keyCode, event);
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
-            volumeUpDown = true; volumeUpAt = System.currentTimeMillis(); checkVolumeShortcut(); return true;
-        }
-        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) {
-            volumeDownAt = System.currentTimeMillis(); checkVolumeShortcut(); return true;
-        }
+        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE).getBoolean("volume_shortcut_enabled", true)) return super.onKeyDown(keyCode, event);
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = true; volumeUpAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
+        if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) { volumeDownAt = System.currentTimeMillis(); checkVolumeShortcut(); return true; }
         return super.onKeyDown(keyCode, event);
     }
 
     @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
-        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) return super.onKeyUp(keyCode, event);
+        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE).getBoolean("volume_shortcut_enabled", true)) return super.onKeyUp(keyCode, event);
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) { volumeUpDown = false; return true; }
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_DOWN) return true;
         return super.onKeyUp(keyCode, event);

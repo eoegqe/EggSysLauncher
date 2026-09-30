@@ -3,21 +3,23 @@ package com.theegget.eggsys;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.Context;
-import android.text.TextUtils;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.view.View;
+import android.Manifest;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ManagerActivity extends Activity {
     private static final String PREFS = "eggsys_manager";
     private static final String VOLUME_SHORTCUT = "volume_shortcut_enabled";
+    private static final int PERMISSION_REQUEST_CODE = 1001;
 
     private ComponentName mode1;
     private ComponentName mode2;
@@ -29,6 +31,27 @@ public class ManagerActivity extends Activity {
         mode1 = new ComponentName(this, LauncherMode1Activity.class);
         mode2 = new ComponentName(this, LauncherMode2Activity.class);
         showSettings();
+        requestRuntimePermissions();
+    }
+
+    private void requestRuntimePermissions() {
+        List<String> permissions = new ArrayList<>();
+        if (android.os.Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+                permissions.add(Manifest.permission.RECORD_AUDIO);
+            if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
+                permissions.add(Manifest.permission.CAMERA);
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (android.os.Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS);
+        }
+        if (!permissions.isEmpty()) {
+            requestPermissions(permissions.toArray(new String[0]), PERMISSION_REQUEST_CODE);
+        }
     }
 
     private void showSettings() {

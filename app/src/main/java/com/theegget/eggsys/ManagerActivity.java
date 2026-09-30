@@ -6,14 +6,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Switch;
 import android.widget.TextView;
 
 public class ManagerActivity extends Activity {
-    private static final String PREFS = "eggsys_manager";
     private static final String VOLUME_SHORTCUT = "volume_shortcut_enabled";
 
     private ComponentName mode1;
@@ -31,7 +31,7 @@ public class ManagerActivity extends Activity {
     private void showSettings() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(32, 32, 32, 32);
+        root.setPadding(32, 32, 32, 0);
 
         TextView title = new TextView(this);
         title.setText("EggSys Manager");
@@ -51,16 +51,12 @@ public class ManagerActivity extends Activity {
 
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(0, 24, 0, 0);
-        root.addView(content, new LinearLayout.LayoutParams(-1, 0, 1));
+        content.setPadding(0, 24, 0, 32);
 
-        Button androidSettings = new Button(this);
-        androidSettings.setText("Open Android Home settings");
-        androidSettings.setOnClickListener(v -> {
-            try { startActivity(new Intent(Settings.ACTION_HOME_SETTINGS)); }
-            catch (Exception ignored) { startActivity(new Intent(Settings.ACTION_SETTINGS)); }
-        });
-        root.addView(androidSettings);
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.setFillViewport(true);
+        scrollView.addView(content);
+        root.addView(scrollView, new LinearLayout.LayoutParams(-1, 0, 1));
 
         behaviorTab.setOnClickListener(v -> showBehaviorTab());
         settingsTab.setOnClickListener(v -> showSettingsTab());
@@ -138,6 +134,17 @@ public class ManagerActivity extends Activity {
         info.setTextSize(17);
         info.setPadding(0, 20, 0, 20);
         content.addView(info);
+
+        Button androidSettings = new Button(this);
+        androidSettings.setText("Open Android Home settings");
+        androidSettings.setOnClickListener(v -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+            } catch (Exception ignored) {
+                startActivity(new Intent(Settings.ACTION_SETTINGS));
+            }
+        });
+        content.addView(androidSettings);
     }
 
     private void switchMode(int mode) {

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <application
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
+        android:usesCleartextTraffic="false"
+        android:allowBackup="false">
+
+        <!-- EggSys Manager: the only visible app in the app drawer. -->
+        <activity
+            android:name=".ManagerActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- EggSys Launcher mode 1: hidden, enabled by default. -->
+        <activity
+            android:name=".LauncherMode1Activity"
+            android:exported="true"
+            android:enabled="true"
+            android:launchMode="singleTask"
+            android:label="@string/mode1_name"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!-- EggSys Launcher mode 2: hidden, disabled by default. -->
+        <activity
+            android:name=".LauncherMode2Activity"
+            android:exported="true"
+            android:enabled="false"
+            android:launchMode="singleTask"
+            android:label="@string/mode2_name"
+            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

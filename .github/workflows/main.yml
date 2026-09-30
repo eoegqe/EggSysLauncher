@@ -1,4 +1,4 @@
-name: Build APKs
+name: Build APK
 on:
   push:
   workflow_dispatch:
@@ -22,12 +22,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - name: Build all APKs
+      - name: Build APK
         run: gradle assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: EggSys-APKs
-          path: |
-            manager/build/outputs/apk/debug/manager-debug.apk
-            launcher1/build/outputs/apk/debug/launcher1-debug.apk
-            launcher2/build/outputs/apk/debug/launcher2-debug.apk
+          name: EggSys-Manager-APK
+          path: app/build/outputs/apk/debug/app-debug.apk

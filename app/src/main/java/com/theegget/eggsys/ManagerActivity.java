@@ -293,6 +293,14 @@ public class ManagerActivity extends Activity {
         heading.setTextSize(22);
         content.addView(heading);
 
+        Button settingsAppButton = new Button(this);
+        settingsAppButton.setText("Open EggSys Settings");
+        settingsAppButton.setOnClickListener(v -> {
+            try { startActivity(new Intent(this, EggSysSettingsActivity.class)); }
+            catch (Exception ignored) {}
+        });
+        content.addView(settingsAppButton);
+
         Button keyboardSettings = new Button(this);
         keyboardSettings.setText("Open keyboard settings");
         keyboardSettings.setOnClickListener(v -> {

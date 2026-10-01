@@ -134,19 +134,19 @@ public class MainActivity extends Activity {
         list.removeAllViews();
         menuItems.clear();
 
-        addMenuItem("EggSys", "https://web-egget-system.base44.app/desktop", false, false);
+        addMenuItem("EggSys", "https://web-egget-system.base44.app/desktop", false, true, true);
 
         for (OsEntry os : loadOsEntries()) {
-            addMenuItem(os.name, os.url, false, true);
+            addMenuItem(os.name, os.url, false, true, false);
         }
 
-        addMenuItem("+ Add OS", null, true, false);
+        addMenuItem("+ Add OS", null, true, false, false);
 
         if (selectedIndex >= menuItems.size()) selectedIndex = menuItems.size() - 1;
         updateSelection();
     }
 
-    private void addMenuItem(String name, String url, boolean addOs, boolean deletable) {
+    private void addMenuItem(String name, String url, boolean addOs, boolean deletable, boolean builtIn) {
         TextView item = new TextView(this);
         item.setTextSize(20);
         item.setTextColor(0xFFFFFFFF);
@@ -155,7 +155,7 @@ public class MainActivity extends Activity {
         item.setClickable(false);
         item.setLongClickable(false);
         item.setText("  " + name);
-        item.setTag(new MenuItemData(name, url, addOs, deletable));
+        item.setTag(new MenuItemData(name, url, addOs, deletable, builtIn));
         list.addView(item);
         menuItems.add(item);
     }
@@ -180,12 +180,18 @@ public class MainActivity extends Activity {
         if (confirmationMode) {
             if (confirmationIndex == 0) {
                 if (pendingDelete != null) {
-                    removeOs(pendingDelete.name, pendingDelete.url);
+                    MenuItemData deleteTarget = pendingDelete;
                     pendingDelete = null;
                     confirmationMode = false;
-                    if (selectedIndex > 0) selectedIndex--;
-                    showBootMenu();
-                    Toast.makeText(this, "OS deleted", Toast.LENGTH_SHORT).show();
+
+                    if (deleteTarget.builtIn) {
+                        uninstallEggSys();
+                    } else {
+                        removeOs(deleteTarget.name, deleteTarget.url);
+                        if (selectedIndex > 0) selectedIndex--;
+                        showBootMenu();
+                        Toast.makeText(this, "OS deleted", Toast.LENGTH_SHORT).show();
+                    }
                 }
             } else {
                 cancelDeleteConfirmation();
@@ -268,6 +274,17 @@ public class MainActivity extends Activity {
         pendingDelete = null;
         confirmationMode = false;
         showBootMenu();
+    }
+
+    private void uninstallEggSys() {
+        try {
+            Intent intent = new Intent(Intent.ACTION_DELETE);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception ignored) {
+            Toast.makeText(this, "Unable to open uninstall screen", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void pickOsFile() {
@@ -421,12 +438,14 @@ public class MainActivity extends Activity {
         String url;
         boolean addOs;
         boolean deletable;
+        boolean builtIn;
 
-        MenuItemData(String name, String url, boolean addOs, boolean deletable) {
+        MenuItemData(String name, String url, boolean addOs, boolean deletable, boolean builtIn) {
             this.name = name;
             this.url = url;
             this.addOs = addOs;
             this.deletable = deletable;
+            this.builtIn = builtIn;
         }
     }
 

@@ -25,6 +25,11 @@
 
 
         <activity
+            android:name="com.theegget.eggsys.bootsettings.MainActivity"
+            android:exported="true"
+            android:label="EggSys Boot Settings" />
+
+        <activity
             android:name="com.eggsys.settings.MainActivity"
             android:exported="true"
             android:label="EggSys Settings">

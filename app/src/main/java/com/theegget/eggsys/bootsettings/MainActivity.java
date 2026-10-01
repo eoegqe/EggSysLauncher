@@ -2,15 +2,15 @@ package com.theegget.eggsys.bootsettings;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;\nimport android.content.SharedPreferences;\nimport android.content.pm.PackageManager;
+import android.content.Intent;\nimport android.view.KeyEvent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
-import android.widget.Button;\nimport android.widget.EditText;\nimport android.app.AlertDialog;
+import android.widget.EditText;\nimport android.app.AlertDialog;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.view.View;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -31,6 +31,8 @@ public class MainActivity extends Activity {
     private static final int PICK_OS = 4001;
 
     private LinearLayout list;
+    private final List<View> menuItems = new ArrayList<>();
+    private int selectedIndex = 0;
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,31 +44,54 @@ public class MainActivity extends Activity {
         if (list != null) rebuildList();
     }
 
+    @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        if (event.getAction() != KeyEvent.ACTION_DOWN) return true;
+
+        switch (event.getKeyCode()) {
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+            case KeyEvent.KEYCODE_DPAD_DOWN:
+                moveSelection(1);
+                return true;
+            case KeyEvent.KEYCODE_VOLUME_UP:
+            case KeyEvent.KEYCODE_DPAD_UP:
+                moveSelection(-1);
+                return true;
+            case KeyEvent.KEYCODE_DPAD_CENTER:
+            case KeyEvent.KEYCODE_ENTER:
+            case KeyEvent.KEYCODE_NUMPAD_ENTER:
+                activateSelection();
+                return true;
+            case KeyEvent.KEYCODE_BACK:
+                return true;
+            default:
+                return true;
+        }
+    }
+
     private void showBootMenu() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(40, 40, 40, 40);
+        root.setBackgroundColor(0xFF000000);
+        root.setFocusableInTouchMode(true);
+        root.requestFocus();
 
         TextView title = new TextView(this);
-        title.setText("EggSys Boot Menu");
+        title.setText("EGGSYS BOOT MENU");
+        title.setTextColor(0xFFFFFFFF);
         title.setTextSize(28);
         root.addView(title);
 
         TextView info = new TextView(this);
-        info.setText("Choose an OS to boot. OS files contain a website URL.");
-        info.setTextSize(17);
+        info.setText("VOLUME UP/DOWN: MOVE    ENTER: SELECT");
+        info.setTextColor(0xFFAAAAAA);
+        info.setTextSize(14);
         info.setPadding(0, 12, 0, 24);
         root.addView(info);
 
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         root.addView(list);
-
-        Button add = new Button(this);
-        add.setText("+ Add OS");
-        add.setTextSize(18);
-        add.setOnClickListener(v -> pickOsFile());
-        root.addView(add);
 
         setContentView(root);
         rebuildList();
@@ -75,29 +100,57 @@ public class MainActivity extends Activity {
     private void rebuildList() {
         if (list == null) return;
         list.removeAllViews();
+        menuItems.clear();
 
-        Button eggSys = new Button(this);
-        eggSys.setText("EggSys");
-        eggSys.setTextSize(18);
-        eggSys.setOnClickListener(v ->
-            boot("https://web-egget-system.base44.app/desktop")
-        );
-        list.addView(eggSys);
+        addMenuItem("EggSys", "https://web-egget-system.base44.app/desktop", false);
 
         for (OsEntry os : loadOsEntries()) {
-            Button button = new Button(this);
-            button.setText(os.name);
-            button.setTextSize(18);
-            button.setOnClickListener(v -> boot(os.url));
+            addMenuItem(os.name, os.url, false);
+        }
 
-            button.setOnLongClickListener(v -> {
-                removeOs(os.name, os.url);
-                rebuildList();
-                Toast.makeText(this, "Removed " + os.name, Toast.LENGTH_SHORT).show();
-                return true;
-            });
+        addMenuItem("+ Add OS", null, true);
 
-            list.addView(button);
+        if (selectedIndex >= menuItems.size()) selectedIndex = menuItems.size() - 1;
+        updateSelection();
+    }
+
+    private void addMenuItem(String name, String url, boolean addOs) {
+        TextView item = new TextView(this);
+        item.setTextSize(20);
+        item.setTextColor(0xFFFFFFFF);
+        item.setPadding(16, 18, 16, 18);
+        item.setFocusable(false);
+        item.setClickable(false);
+        item.setLongClickable(false);
+        item.setText("  " + name);
+        item.setTag(new MenuItemData(name, url, addOs));
+        list.addView(item);
+        menuItems.add(item);
+    }
+
+    private void moveSelection(int delta) {
+        if (menuItems.isEmpty()) return;
+        selectedIndex += delta;
+        if (selectedIndex < 0) selectedIndex = menuItems.size() - 1;
+        if (selectedIndex >= menuItems.size()) selectedIndex = 0;
+        updateSelection();
+    }
+
+    private void updateSelection() {
+        for (int i = 0; i < menuItems.size(); i++) {
+            TextView item = (TextView) menuItems.get(i);
+            MenuItemData data = (MenuItemData) item.getTag();
+            item.setText((i == selectedIndex ? "> " : "  ") + data.name);
+        }
+    }
+
+    private void activateSelection() {
+        if (selectedIndex < 0 || selectedIndex >= menuItems.size()) return;
+        MenuItemData data = (MenuItemData) menuItems.get(selectedIndex);
+        if (data.addOs) {
+            pickOsFile();
+        } else {
+            boot(data.url);
         }
     }
 
@@ -244,6 +297,18 @@ public class MainActivity extends Activity {
             }
         }
         getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(OS_LIST, array.toString()).apply();
+    }
+
+    private static class MenuItemData {
+        String name;
+        String url;
+        boolean addOs;
+
+        MenuItemData(String name, String url, boolean addOs) {
+            this.name = name;
+            this.url = url;
+            this.addOs = addOs;
+        }
     }
 
     private static class OsEntry {

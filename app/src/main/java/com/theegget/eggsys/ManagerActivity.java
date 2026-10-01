@@ -298,7 +298,7 @@ public class ManagerActivity extends Activity {
         settingsAppButton.setOnClickListener(v -> {
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(
-                "com.eggsys.settings",
+                "com.theegget.eggsys",
                 "com.eggsys.settings.MainActivity"
             ));
             try { startActivity(intent); }

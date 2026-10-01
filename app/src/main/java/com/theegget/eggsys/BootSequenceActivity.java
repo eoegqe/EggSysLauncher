@@ -1,7 +1,6 @@
 package com.theegget.eggsys;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -30,17 +29,13 @@ public class BootSequenceActivity extends Activity {
             return;
         }
 
-        // Mark this startup as in progress before launching the actual launcher.
+        // Mark this startup as in progress before launching the native launcher.
         BootState.set(this, 1);
-        startActualLauncher();
+        startNativeLauncher();
     }
 
-    private void startActualLauncher() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName(
-            this,
-            LauncherMode1Activity.class
-        ));
+    private void startNativeLauncher() {
+        Intent intent = new Intent(this, NativeLauncherActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         try {
             startActivity(intent);

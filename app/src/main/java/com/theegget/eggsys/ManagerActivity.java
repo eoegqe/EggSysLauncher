@@ -52,7 +52,7 @@ public class ManagerActivity extends Activity {
         bootSettingsOpened = true;
         Intent intent = new Intent();
         intent.setComponent(new ComponentName(
-            "com.theegget.eggsys.bootsettings",
+            "com.theegget.eggsys",
             "com.theegget.eggsys.bootsettings.MainActivity"
         ));
         try {

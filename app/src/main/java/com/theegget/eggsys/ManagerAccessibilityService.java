@@ -28,7 +28,7 @@ public class ManagerAccessibilityService extends AccessibilityService {
     private static final String BLOCKING_ENABLED = "block_non_allowed_apps";
     private static final String ALLOWED_APPS = "allowed_apps";
     private static final String MANAGER_PACKAGE = "com.theegget.eggsys";
-    private static final String BOOT_SETTINGS_PACKAGE = "com.theegget.eggsys.bootsettings";
+    private static final String BOOT_SETTINGS_PACKAGE = MANAGER_PACKAGE;
     private static final long VOLUME_HOLD_MS = 3000;
 
     private WindowManager windowManager;
@@ -105,11 +105,13 @@ public class ManagerAccessibilityService extends AccessibilityService {
             volumeTriggered = false;
             handler.removeCallbacks(volumeAction);
             handler.postDelayed(volumeAction, VOLUME_HOLD_MS);
+            return true;
         } else if (event.getAction() == KeyEvent.ACTION_UP) {
             volumeDownAt = 0;
             handler.removeCallbacks(volumeAction);
+            return true;
         }
-        return false;
+        return true;
     }
 
     @Override public void onInterrupt() {}

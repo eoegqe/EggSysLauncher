@@ -23,7 +23,6 @@
             </intent-filter>
         </activity>
 
-
         <activity
             android:name="com.theegget.eggsys.bootsettings.MainActivity"
             android:exported="true"
@@ -84,6 +83,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".NativeLauncherActivity"
+            android:exported="false"
+            android:launchMode="singleTask"
+            android:label="EggSys Launcher" />
 
         <activity
             android:name=".LauncherMode1Activity"

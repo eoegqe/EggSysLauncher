@@ -147,7 +147,7 @@ public class MainActivity extends Activity {
 
     private void activateSelection() {
         if (selectedIndex < 0 || selectedIndex >= menuItems.size()) return;
-        MenuItemData data = (MenuItemData) menuItems.get(selectedIndex);
+        MenuItemData data = (MenuItemData) ((TextView) menuItems.get(selectedIndex)).getTag();
         if (data.addOs) {
             pickOsFile();
         } else {

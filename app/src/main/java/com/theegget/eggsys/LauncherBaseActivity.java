@@ -75,7 +75,14 @@ public abstract class LauncherBaseActivity extends Activity {
         WebSettings s = webView.getSettings();
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
+        s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
+
+        android.webkit.CookieManager cookies = android.webkit.CookieManager.getInstance();
+        cookies.setAcceptCookie(true);
+        if (android.os.Build.VERSION.SDK_INT >= 21) {
+            cookies.setAcceptThirdPartyCookies(webView, true);
+        }
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);

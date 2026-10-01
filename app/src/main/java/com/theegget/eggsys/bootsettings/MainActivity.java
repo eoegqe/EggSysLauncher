@@ -2,13 +2,15 @@ package com.theegget.eggsys.bootsettings;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;\nimport android.view.KeyEvent;
-import android.content.pm.PackageManager;
+import android.content.Intent;
+import android.view.KeyEvent;
+import android.view.View;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
-import android.widget.EditText;\nimport android.app.AlertDialog;
+import android.widget.EditText;
+import android.app.AlertDialog;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,7 +26,6 @@ import java.util.List;
 
 public class MainActivity extends Activity {
     private static final String MANAGER_PACKAGE = "com.theegget.eggsys";
-    private static final String MANAGER_ACTIVITY = "com.theegget.eggsys.ManagerActivity";
     private static final String LAUNCHER_ACTIVITY = "com.theegget.eggsys.LauncherMode1Activity";
     private static final String PREFS = "eggsys_boot_menu";
     private static final String OS_LIST = "os_list";
@@ -279,6 +280,7 @@ public class MainActivity extends Activity {
         saveOsEntries(entries);
     }
 
+    @SuppressWarnings("unused")
     private void removeOs(String name, String url) {
         List<OsEntry> entries = loadOsEntries();
         entries.removeIf(entry -> entry.name.equals(name) && entry.url.equals(url));

@@ -27,13 +27,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.core.app.NotificationCompat;
 import androidx.webkit.WebSettingsCompat;
 import androidx.webkit.WebViewFeature;
-
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class LauncherBaseActivity extends Activity {
     private static final String HOST = "web-egget-system.base44.app";
@@ -147,7 +146,10 @@ public abstract class LauncherBaseActivity extends Activity {
         createNotificationChannel();
 
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
-        else {\n            String bootUrl = getIntent().getStringExtra("eggsys_boot_url");\n            webView.loadUrl(bootUrl == null || bootUrl.isEmpty() ? BASE_URL + getPath() : bootUrl);\n        }
+        else {
+            String bootUrl = getIntent().getStringExtra("eggsys_boot_url");
+            webView.loadUrl(bootUrl == null || bootUrl.isEmpty() ? BASE_URL + getPath() : bootUrl);
+        }
     }
 
     private class Bridge {

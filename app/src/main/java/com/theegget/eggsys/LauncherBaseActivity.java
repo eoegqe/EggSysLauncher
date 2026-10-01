@@ -5,6 +5,9 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -43,6 +46,16 @@ public abstract class LauncherBaseActivity extends Activity {
     private static final int GEO_PERMISSION_REQUEST = 1002;
 
     private boolean volumeUpDown;
+    private boolean batteryReceiverRegistered;
+    private final BroadcastReceiver batteryReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context context, Intent intent) {
+            if (intent == null || !Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) return;
+            int level = intent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+            if (level == 0) {
+                BootState.reset(context);
+            }
+        }
+    };
     private boolean volumeShortcutTriggered;
     private final Handler volumeHandler = new Handler(Looper.getMainLooper());
     private final Runnable volumeUpLongPress = new Runnable() {
@@ -136,12 +149,19 @@ public abstract class LauncherBaseActivity extends Activity {
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 Uri u = Uri.parse(url);
-                if (HOST.equals(u.getHost())) installNotificationCompatibility();
+                if (HOST.equals(u.getHost())) {
+                    installNotificationCompatibility();
+
+                    // Stage 2 startup checkpoint: the actual launcher loaded.
+                    // A crash before this point leaves has_already_booted at 1.
+                    BootState.set(LauncherBaseActivity.this, 2);
+                }
             }
         });
 
         webView.addJavascriptInterface(new Bridge(), "EggSysOS");
         createNotificationChannel();
+        registerBatteryMonitor();
 
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
         else {
@@ -372,6 +392,26 @@ public abstract class LauncherBaseActivity extends Activity {
         );
     }
 
+    private void registerBatteryMonitor() {
+        if (batteryReceiverRegistered) return;
+
+        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(batteryReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(batteryReceiver, filter);
+        }
+        batteryReceiverRegistered = true;
+    }
+
+    private void unregisterBatteryMonitor() {
+        if (!batteryReceiverRegistered) return;
+        try {
+            unregisterReceiver(batteryReceiver);
+        } catch (Exception ignored) {}
+        batteryReceiverRegistered = false;
+    }
+
     private void createNotificationChannel() {
         if (android.os.Build.VERSION.SDK_INT >= 26) {
             NotificationManager manager =
@@ -550,6 +590,11 @@ public abstract class LauncherBaseActivity extends Activity {
 
     private void openManager() {
         try { startActivity(new Intent(this, ManagerActivity.class)); } catch (Exception ignored) {}
+    }
+
+    @Override protected void onDestroy() {
+        unregisterBatteryMonitor();
+        super.onDestroy();
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {

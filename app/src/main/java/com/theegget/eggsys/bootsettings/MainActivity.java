@@ -43,7 +43,16 @@ public class MainActivity extends Activity {
     private final Handler backHandler = new Handler(Looper.getMainLooper());
     private final Runnable backLongPress = () -> {
         backLongPressed = true;
-        if (!confirmationMode) showDeleteConfirmation();
+        if (!confirmationMode) {
+            if (selectedIndex >= 0 && selectedIndex < menuItems.size()) {
+                MenuItemData data = (MenuItemData) ((TextView) menuItems.get(selectedIndex)).getTag();
+                if (data.builtIn) {
+                    uninstallEggSys();
+                } else {
+                    showDeleteConfirmation();
+                }
+            }
+        }
     };
 
     @Override protected void onCreate(Bundle savedInstanceState) {
@@ -211,7 +220,7 @@ public class MainActivity extends Activity {
     private void showDeleteConfirmation() {
         if (selectedIndex < 0 || selectedIndex >= menuItems.size()) return;
         MenuItemData data = (MenuItemData) ((TextView) menuItems.get(selectedIndex)).getTag();
-        if (!data.deletable) return;
+        if (!data.deletable || data.builtIn) return;
 
         pendingDelete = data;
         confirmationMode = true;
@@ -231,7 +240,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView info = new TextView(this);
-        info.setText("Delete \\"" + data.name + "\\"?\\nVOLUME UP/DOWN: MOVE    BACK: SELECT");
+        info.setText("Delete \\"" + data.name + "\"?\nVOLUME UP/DOWN: MOVE    BACK: SELECT");
         info.setTextColor(0xFFAAAAAA);
         info.setTextSize(14);
         info.setPadding(0, 12, 0, 24);

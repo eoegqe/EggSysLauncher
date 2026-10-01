@@ -87,21 +87,5 @@
                 <data android:scheme="eggsys" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".LauncherMode2Activity" android:exported="true" android:enabled="false"
-            android:launchMode="singleTask" android:label="@string/mode2_name"
-            android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.HOME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="eggsys" />
-            </intent-filter>
-        </activity>
     </application>
 </manifest>

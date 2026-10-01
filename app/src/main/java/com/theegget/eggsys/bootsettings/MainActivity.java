@@ -2,7 +2,7 @@ package com.theegget.eggsys.bootsettings;
 
 import android.app.Activity;
 import android.content.ComponentName;
-import android.content.Intent;\nimport android.content.pm.PackageManager;
+import android.content.Intent;\nimport android.content.SharedPreferences;\nimport android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;

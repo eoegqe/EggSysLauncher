@@ -155,48 +155,32 @@ public class ManagerActivity extends Activity {
         content.removeAllViews();
 
         TextView heading = new TextView(this);
-        heading.setText("EggSys Bootable");
+        heading.setText("Boot Menu");
         heading.setTextSize(22);
         content.addView(heading);
 
         TextView description = new TextView(this);
-        description.setText("When off, EggSys Manager does not participate in the EggSys launcher modes. When on, Mode 1 is enabled so Android can use it as the default Home launcher.");
+        description.setText("EggSys uses a boot menu. EggSys is built in, and + Add OS lets you add a .OS file containing a website URL.");
         description.setTextSize(16);
         description.setPadding(0, 12, 0, 20);
         content.addView(description);
 
-        Switch bootable = new Switch(this);
-        bootable.setText("EggSys Bootable");
-        bootable.setTextSize(18);
-        bootable.setChecked(getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(BOOTABLE, false));
-        bootable.setOnCheckedChangeListener((button, checked) -> {
-            getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(BOOTABLE, checked).apply();
-            if (checked) {
-                applyBootMode(1);
-            } else {
-                disableBothLaunchers();
-            }
-            updateBootStatus();
+        Button openBootMenu = new Button(this);
+        openBootMenu.setText("Open Boot Menu");
+        openBootMenu.setOnClickListener(v -> {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(
+                "com.theegget.eggsys",
+                "com.theegget.eggsys.bootsettings.MainActivity"
+            ));
+            try { startActivity(intent); } catch (Exception ignored) {}
         });
-        content.addView(bootable);
-
-        status = new TextView(this);
-        status.setTextSize(17);
-        status.setPadding(0, 16, 0, 16);
-        content.addView(status);
-        updateBootStatus();
+        content.addView(openBootMenu);
 
         Button homeSettings = new Button(this);
         homeSettings.setText("Open Android Home settings");
         homeSettings.setOnClickListener(v -> openHomeSettings());
         content.addView(homeSettings);
-    }
-
-    private void updateBootStatus() {
-        if (status == null) return;
-        boolean bootable = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(BOOTABLE, false);
-        status.setText("EggSys Bootable: " + (bootable ? "ON" : "OFF") +
-            "\nActive launcher mode: " + currentMode());
     }
 
     private void showAppsTab() {
@@ -420,27 +404,18 @@ public class ManagerActivity extends Activity {
     }
 
     private void applyBootMode(int mode) {
-        if (!getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(BOOTABLE, false) && mode != 0) {
-            getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(BOOTABLE, true).apply();
-        }
         if (mode == 0) {
-            disableBothLaunchers();
+            disableLauncher();
         } else {
             getPackageManager().setComponentEnabledSetting(mode1,
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
         }
-
         if (content != null) showBootTab();
     }
 
-    private void disableBothLaunchers() {
+    private void disableLauncher() {
         getPackageManager().setComponentEnabledSetting(mode1,
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-    }
-
-    private String currentMode() {
-        if (isEnabled(mode1)) return "Mode 1";
-        return "None";
     }
 
     private boolean isEnabled(ComponentName component) {

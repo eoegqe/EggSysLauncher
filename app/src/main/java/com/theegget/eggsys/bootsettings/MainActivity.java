@@ -225,7 +225,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView info = new TextView(this);
-        info.setText("Delete \\" + data.name + "\\"?\\nVOLUME UP/DOWN: MOVE    BACK: SELECT");
+        info.setText("Delete \\"" + data.name + "\\"?\\nVOLUME UP/DOWN: MOVE    BACK: SELECT");
         info.setTextColor(0xFFAAAAAA);
         info.setTextSize(14);
         info.setPadding(0, 12, 0, 24);

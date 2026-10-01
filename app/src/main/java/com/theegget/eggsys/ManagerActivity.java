@@ -296,7 +296,12 @@ public class ManagerActivity extends Activity {
         Button settingsAppButton = new Button(this);
         settingsAppButton.setText("Open EggSys Settings");
         settingsAppButton.setOnClickListener(v -> {
-            try { startActivity(new Intent(this, EggSysSettingsActivity.class)); }
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(
+                "com.eggsys.settings",
+                "com.eggsys.settings.MainActivity"
+            ));
+            try { startActivity(intent); }
             catch (Exception ignored) {}
         });
         content.addView(settingsAppButton);

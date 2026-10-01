@@ -37,7 +37,7 @@ public class EggSysSettingsActivity extends Activity {
         addSection(root, "Display");
         addButton(root, "Brightness", v -> openSettings(Settings.ACTION_DISPLAY_SETTINGS));
         addButton(root, "Dark Mode", v -> openSettings(Settings.ACTION_DISPLAY_SETTINGS));
-        addButton(root, "Wallpaper", v -> openSettings(Settings.ACTION_WALLPAPER_SETTINGS));
+        addButton(root, "Wallpaper", v -> openSettings("android.settings.WALLPAPER_SETTINGS"));
 
         addSection(root, "Sound");
         addButton(root, "Volume", v -> openSettings(Settings.ACTION_SOUND_SETTINGS));

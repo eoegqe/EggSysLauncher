@@ -1,7 +1,6 @@
 package com.theegget.eggsys.bootsettings;
 
 import android.app.Activity;
-import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.view.KeyEvent;
@@ -32,7 +31,6 @@ public class MainActivity extends Activity {
     private static final String LAUNCHER_ACTIVITY = "com.theegget.eggsys.LauncherMode1Activity";
     private static final String PREFS = "eggsys_boot_menu";
     private static final String OS_LIST = "os_list";
-    private static final String PENDING_UNINSTALL = "pending_uninstall";
     private static final int PICK_OS = 4001;
 
     private LinearLayout list;
@@ -288,30 +286,6 @@ public class MainActivity extends Activity {
     }
 
     private void uninstallEggSys() {
-        try {
-            DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-            ComponentName admin = new ComponentName(this, com.theegget.eggsys.EggSysDeviceAdminReceiver.class);
-
-            if (dpm != null && dpm.isAdminActive(admin)) {
-                getSharedPreferences(PREFS, MODE_PRIVATE)
-                    .edit()
-                    .putBoolean(PENDING_UNINSTALL, true)
-                    .apply();
-
-                Intent settings = new Intent("android.settings.SECURITY_SETTINGS");
-                settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(settings);
-                Toast.makeText(this, "Disable EggSys device admin, then Android will show the uninstall confirmation.", Toast.LENGTH_LONG).show();
-                return;
-            }
-
-            showAndroidUninstallConfirmation();
-        } catch (Exception ignored) {
-            Toast.makeText(this, "Unable to open security settings", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void showAndroidUninstallConfirmation() {
         try {
             Intent intent = new Intent(Intent.ACTION_DELETE);
             intent.setData(Uri.parse("package:" + getPackageName()));

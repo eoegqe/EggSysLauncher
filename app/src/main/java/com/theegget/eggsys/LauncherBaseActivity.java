@@ -147,7 +147,7 @@ public abstract class LauncherBaseActivity extends Activity {
         createNotificationChannel();
 
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
-        else webView.loadUrl(BASE_URL + getPath());
+        else {\n            String bootUrl = getIntent().getStringExtra("eggsys_boot_url");\n            webView.loadUrl(bootUrl == null || bootUrl.isEmpty() ? BASE_URL + getPath() : bootUrl);\n        }
     }
 
     private class Bridge {

@@ -7,6 +7,8 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
 import android.widget.EditText;
@@ -34,6 +36,15 @@ public class MainActivity extends Activity {
     private LinearLayout list;
     private final List<View> menuItems = new ArrayList<>();
     private int selectedIndex = 0;
+    private int confirmationIndex = 0;
+    private boolean confirmationMode = false;
+    private MenuItemData pendingDelete = null;
+    private boolean backLongPressed = false;
+    private final Handler backHandler = new Handler(Looper.getMainLooper());
+    private final Runnable backLongPress = () -> {
+        backLongPressed = true;
+        if (!confirmationMode) showDeleteConfirmation();
+    };
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,23 +57,43 @@ public class MainActivity extends Activity {
     }
 
     @Override public boolean dispatchKeyEvent(KeyEvent event) {
+        int keyCode = event.getKeyCode();
+
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (event.getRepeatCount() == 0) {
+                    backLongPressed = false;
+                    backHandler.removeCallbacks(backLongPress);
+                    backHandler.postDelayed(backLongPress, 700);
+                }
+                return true;
+            }
+
+            if (event.getAction() == KeyEvent.ACTION_UP) {
+                backHandler.removeCallbacks(backLongPress);
+                if (!backLongPressed) activateSelection();
+                return true;
+            }
+            return true;
+        }
+
         if (event.getAction() != KeyEvent.ACTION_DOWN) return true;
 
-        switch (event.getKeyCode()) {
+        switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_DOWN:
             case KeyEvent.KEYCODE_DPAD_DOWN:
-                moveSelection(1);
+                if (confirmationMode) moveConfirmationSelection(1);
+                else moveSelection(1);
                 return true;
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_DPAD_UP:
-                moveSelection(-1);
+                if (confirmationMode) moveConfirmationSelection(-1);
+                else moveSelection(-1);
                 return true;
             case KeyEvent.KEYCODE_DPAD_CENTER:
             case KeyEvent.KEYCODE_ENTER:
             case KeyEvent.KEYCODE_NUMPAD_ENTER:
                 activateSelection();
-                return true;
-            case KeyEvent.KEYCODE_BACK:
                 return true;
             default:
                 return true;
@@ -84,7 +115,7 @@ public class MainActivity extends Activity {
         root.addView(title);
 
         TextView info = new TextView(this);
-        info.setText("VOLUME UP/DOWN: MOVE    ENTER: SELECT");
+        info.setText("VOLUME UP/DOWN: MOVE    BACK: SELECT    HOLD BACK: DELETE");
         info.setTextColor(0xFFAAAAAA);
         info.setTextSize(14);
         info.setPadding(0, 12, 0, 24);
@@ -103,19 +134,19 @@ public class MainActivity extends Activity {
         list.removeAllViews();
         menuItems.clear();
 
-        addMenuItem("EggSys", "https://web-egget-system.base44.app/desktop", false);
+        addMenuItem("EggSys", "https://web-egget-system.base44.app/desktop", false, false);
 
         for (OsEntry os : loadOsEntries()) {
-            addMenuItem(os.name, os.url, false);
+            addMenuItem(os.name, os.url, false, true);
         }
 
-        addMenuItem("+ Add OS", null, true);
+        addMenuItem("+ Add OS", null, true, false);
 
         if (selectedIndex >= menuItems.size()) selectedIndex = menuItems.size() - 1;
         updateSelection();
     }
 
-    private void addMenuItem(String name, String url, boolean addOs) {
+    private void addMenuItem(String name, String url, boolean addOs, boolean deletable) {
         TextView item = new TextView(this);
         item.setTextSize(20);
         item.setTextColor(0xFFFFFFFF);
@@ -124,7 +155,7 @@ public class MainActivity extends Activity {
         item.setClickable(false);
         item.setLongClickable(false);
         item.setText("  " + name);
-        item.setTag(new MenuItemData(name, url, addOs));
+        item.setTag(new MenuItemData(name, url, addOs, deletable));
         list.addView(item);
         menuItems.add(item);
     }
@@ -146,6 +177,22 @@ public class MainActivity extends Activity {
     }
 
     private void activateSelection() {
+        if (confirmationMode) {
+            if (confirmationIndex == 0) {
+                if (pendingDelete != null) {
+                    removeOs(pendingDelete.name, pendingDelete.url);
+                    pendingDelete = null;
+                    confirmationMode = false;
+                    if (selectedIndex > 0) selectedIndex--;
+                    showBootMenu();
+                    Toast.makeText(this, "OS deleted", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                cancelDeleteConfirmation();
+            }
+            return;
+        }
+
         if (selectedIndex < 0 || selectedIndex >= menuItems.size()) return;
         MenuItemData data = (MenuItemData) ((TextView) menuItems.get(selectedIndex)).getTag();
         if (data.addOs) {
@@ -153,6 +200,74 @@ public class MainActivity extends Activity {
         } else {
             boot(data.url);
         }
+    }
+
+    private void showDeleteConfirmation() {
+        if (selectedIndex < 0 || selectedIndex >= menuItems.size()) return;
+        MenuItemData data = (MenuItemData) ((TextView) menuItems.get(selectedIndex)).getTag();
+        if (!data.deletable) return;
+
+        pendingDelete = data;
+        confirmationMode = true;
+        confirmationIndex = 0;
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(40, 40, 40, 40);
+        root.setBackgroundColor(0xFF000000);
+        root.setFocusableInTouchMode(true);
+        root.requestFocus();
+
+        TextView title = new TextView(this);
+        title.setText("DELETE OS?");
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(28);
+        root.addView(title);
+
+        TextView info = new TextView(this);
+        info.setText("Delete \\" + data.name + "\\"?\\nVOLUME UP/DOWN: MOVE    BACK: SELECT");
+        info.setTextColor(0xFFAAAAAA);
+        info.setTextSize(14);
+        info.setPadding(0, 12, 0, 24);
+        root.addView(info);
+
+        TextView yes = new TextView(this);
+        yes.setTextSize(20);
+        yes.setTextColor(0xFFFFFFFF);
+        yes.setPadding(16, 18, 16, 18);
+        yes.setText("> Yes");
+        root.addView(yes);
+
+        TextView no = new TextView(this);
+        no.setTextSize(20);
+        no.setTextColor(0xFFFFFFFF);
+        no.setPadding(16, 18, 16, 18);
+        no.setText("  No");
+        root.addView(no);
+
+        list = root;
+        setContentView(root);
+    }
+
+    private void moveConfirmationSelection(int delta) {
+        confirmationIndex += delta;
+        if (confirmationIndex < 0) confirmationIndex = 1;
+        if (confirmationIndex > 1) confirmationIndex = 0;
+        updateConfirmationSelection();
+    }
+
+    private void updateConfirmationSelection() {
+        if (list == null || list.getChildCount() < 4) return;
+        TextView yes = (TextView) list.getChildAt(2);
+        TextView no = (TextView) list.getChildAt(3);
+        yes.setText((confirmationIndex == 0 ? "> " : "  ") + "Yes");
+        no.setText((confirmationIndex == 1 ? "> " : "  ") + "No");
+    }
+
+    private void cancelDeleteConfirmation() {
+        pendingDelete = null;
+        confirmationMode = false;
+        showBootMenu();
     }
 
     private void pickOsFile() {
@@ -305,11 +420,13 @@ public class MainActivity extends Activity {
         String name;
         String url;
         boolean addOs;
+        boolean deletable;
 
-        MenuItemData(String name, String url, boolean addOs) {
+        MenuItemData(String name, String url, boolean addOs, boolean deletable) {
             this.name = name;
             this.url = url;
             this.addOs = addOs;
+            this.deletable = deletable;
         }
     }
 

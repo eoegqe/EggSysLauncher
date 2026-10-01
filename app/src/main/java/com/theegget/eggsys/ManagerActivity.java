@@ -40,7 +40,6 @@ public class ManagerActivity extends Activity {
     private static final long BOOT_SETTINGS_HOLD_MS = 3000;
 
     private ComponentName mode1;
-    private ComponentName mode2;
     private LinearLayout content;
     private TextView status;
     private final Handler volumeHandler = new Handler();
@@ -68,7 +67,6 @@ public class ManagerActivity extends Activity {
         }
 
         mode1 = new ComponentName(this, LauncherMode1Activity.class);
-        mode2 = new ComponentName(this, LauncherMode2Activity.class);
 
         showSettings();
         requestRuntimePermissions();
@@ -425,13 +423,12 @@ public class ManagerActivity extends Activity {
         if (!getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(BOOTABLE, false) && mode != 0) {
             getSharedPreferences(PREFS, MODE_PRIVATE).edit().putBoolean(BOOTABLE, true).apply();
         }
-        ComponentName enable = mode == 2 ? mode2 : mode1;
-        ComponentName disable = mode == 2 ? mode1 : mode2;
-
-        getPackageManager().setComponentEnabledSetting(enable,
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-        getPackageManager().setComponentEnabledSetting(disable,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+        if (mode == 0) {
+            disableBothLaunchers();
+        } else {
+            getPackageManager().setComponentEnabledSetting(mode1,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
+        }
 
         if (content != null) showBootTab();
     }
@@ -439,13 +436,10 @@ public class ManagerActivity extends Activity {
     private void disableBothLaunchers() {
         getPackageManager().setComponentEnabledSetting(mode1,
             PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-        getPackageManager().setComponentEnabledSetting(mode2,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
     }
 
     private String currentMode() {
         if (isEnabled(mode1)) return "Mode 1";
-        if (isEnabled(mode2)) return "Mode 2";
         return "None";
     }
 

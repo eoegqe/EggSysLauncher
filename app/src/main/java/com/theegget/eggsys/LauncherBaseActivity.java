@@ -47,11 +47,9 @@ public abstract class LauncherBaseActivity extends Activity {
     private final Handler volumeHandler = new Handler(Looper.getMainLooper());
     private final Runnable volumeUpLongPress = new Runnable() {
         @Override public void run() {
-            if (volumeUpDown
-                    && getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                        .getBoolean("volume_shortcut_enabled", true)) {
+            if (volumeUpDown) {
                 volumeShortcutTriggered = true;
-                openManager();
+                openBootMenu();
             }
         }
     };
@@ -511,44 +509,46 @@ public abstract class LauncherBaseActivity extends Activity {
     }
 
     @Override public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) {
-            return super.onKeyDown(keyCode, event);
-        }
-
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
             if (event.getRepeatCount() == 0) {
                 volumeUpDown = true;
                 volumeShortcutTriggered = false;
                 volumeHandler.postDelayed(volumeUpLongPress, 700);
             }
-            // Do not consume the key: Android keeps normal volume control.
-            return super.onKeyDown(keyCode, event);
+            // Consume Volume Up so Android does not show the normal volume UI.
+            return true;
         }
 
         return super.onKeyDown(keyCode, event);
     }
 
     @Override public boolean onKeyUp(int keyCode, android.view.KeyEvent event) {
-        if (!getSharedPreferences("eggsys_manager", MODE_PRIVATE)
-                .getBoolean("volume_shortcut_enabled", true)) {
-            return super.onKeyUp(keyCode, event);
-        }
-
         if (keyCode == android.view.KeyEvent.KEYCODE_VOLUME_UP) {
             volumeUpDown = false;
             volumeHandler.removeCallbacks(volumeUpLongPress);
             volumeShortcutTriggered = false;
-            // Do not consume the key: Android keeps normal volume control.
-            return super.onKeyUp(keyCode, event);
+            // Consume Volume Up so Android does not show the normal volume UI.
+            return true;
         }
 
         return super.onKeyUp(keyCode, event);
     }
 
-    private void openManager() {
+    private void openBootMenu() {
         volumeUpDown = false;
         volumeHandler.removeCallbacks(volumeUpLongPress);
+        try {
+            Intent intent = new Intent();
+            intent.setComponent(new android.content.ComponentName(
+                this,
+                "com.theegget.eggsys.bootsettings.MainActivity"
+            ));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(intent);
+        } catch (Exception ignored) {}
+    }
+
+    private void openManager() {
         try { startActivity(new Intent(this, ManagerActivity.class)); } catch (Exception ignored) {}
     }
 

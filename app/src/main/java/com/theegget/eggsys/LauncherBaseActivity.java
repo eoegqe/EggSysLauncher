@@ -150,6 +150,29 @@ public abstract class LauncherBaseActivity extends Activity {
             return true;
         }
 
+        @JavascriptInterface public boolean opensys(String url) {
+            if (url == null || url.isEmpty() || !isTrustedPage()) return false;
+
+            Uri uri;
+            try {
+                uri = Uri.parse(url);
+            } catch (Exception ignored) {
+                return false;
+            }
+
+            if (!"eggsys".equalsIgnoreCase(uri.getScheme())) return false;
+
+            String route = uri.getHost();
+            if (route == null) return false;
+
+            if ("manager".equalsIgnoreCase(route)) {
+                runOnUiThread(() -> openManager());
+                return true;
+            }
+
+            return false;
+        }
+
         @JavascriptInterface public int mode() {
             return getMode();
         }

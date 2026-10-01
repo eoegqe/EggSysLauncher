@@ -7,7 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.database.Cursor;
-import android.widget.Button;
+import android.widget.Button;\nimport android.widget.EditText;\nimport android.app.AlertDialog;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.view.View;
@@ -127,14 +127,32 @@ public class MainActivity extends Activity {
             return;
         }
 
-        String name = getFileName(uri);
-        if (name == null || name.isEmpty()) name = "Other OS";
-        if (name.toLowerCase().endsWith(".os")) name = name.substring(0, name.length() - 3);
-        if (name.isEmpty()) name = "Other OS";
+        String fileName = getFileName(uri);
+        String suggestedName = fileName == null ? "Other OS" : fileName;
+        if (suggestedName.toLowerCase().endsWith(".os")) {
+            suggestedName = suggestedName.substring(0, suggestedName.length() - 3);
+        }
+        if (suggestedName.trim().isEmpty()) suggestedName = "Other OS";
 
-        saveOs(new OsEntry(name, url));
-        rebuildList();
-        Toast.makeText(this, "OS added: " + name, Toast.LENGTH_SHORT).show();
+        EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setHint("OS name");
+        input.setText(suggestedName);
+
+        new AlertDialog.Builder(this)
+            .setTitle("Name your OS")
+            .setMessage("Choose the name that will appear in the boot menu.")
+            .setView(input)
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Create", (dialog, which) -> {
+                String name = input.getText().toString().trim();
+                if (name.isEmpty()) name = "Other OS";
+
+                saveOs(new OsEntry(name, url));
+                rebuildList();
+                Toast.makeText(this, "Created OS: " + name, Toast.LENGTH_SHORT).show();
+            })
+            .show();
     }
 
     private String readOsUrl(Uri uri) {

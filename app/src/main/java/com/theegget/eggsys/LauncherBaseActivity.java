@@ -6,6 +6,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -21,6 +22,11 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 
 import androidx.core.app.NotificationCompat;
 import androidx.webkit.WebSettingsCompat;
@@ -182,6 +188,61 @@ public abstract class LauncherBaseActivity extends Activity {
 
         @JavascriptInterface public int mode() {
             return getMode();
+        }
+
+        @JavascriptInterface public String fetchApps() {
+            if (!isTrustedPage()) return "[]";
+
+            JSONArray apps = new JSONArray();
+            PackageManager pm = getPackageManager();
+            Intent launcherIntent = new Intent(Intent.ACTION_MAIN);
+            launcherIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+            try {
+                for (android.content.pm.ResolveInfo info : pm.queryIntentActivities(launcherIntent, 0)) {
+                    if (info == null || info.activityInfo == null) continue;
+
+                    String packageName = info.activityInfo.packageName;
+                    if (packageName == null || packageName.isEmpty()) continue;
+
+                    try {
+                        android.content.pm.ApplicationInfo appInfo =
+                            info.activityInfo.applicationInfo;
+                        CharSequence label = pm.getApplicationLabel(appInfo);
+                        android.graphics.drawable.Drawable drawable = pm.getApplicationIcon(appInfo);
+
+                        JSONObject app = new JSONObject();
+                        app.put("id", packageName);
+                        app.put("name", label == null ? packageName : label.toString());
+                        app.put("icon", drawableToDataUri(drawable));
+                        apps.put(app);
+                    } catch (Exception ignored) {
+                        // Skip applications whose metadata or icon cannot be read.
+                    }
+                }
+            } catch (Exception ignored) {
+                return "[]";
+            }
+
+            return apps.toString();
+        }
+
+        private String drawableToDataUri(android.graphics.drawable.Drawable drawable) {
+            if (drawable == null) return "";
+
+            int width = Math.max(1, drawable.getIntrinsicWidth());
+            int height = Math.max(1, drawable.getIntrinsicHeight());
+            Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+
+            ByteArrayOutputStream output = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+            bitmap.recycle();
+
+            return "data:image/png;base64,"
+                + android.util.Base64.encodeToString(output.toByteArray(), android.util.Base64.NO_WRAP);
         }
 
         @JavascriptInterface public boolean notificationsSupported() {

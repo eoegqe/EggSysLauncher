@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.theegget.eggsys.eaf.EafPackage;
 import com.theegget.eggsys.eaf.EafRegistry;
+import com.theegget.eggsys.eaf.EafRuntimeActivity;
 
 import java.util.ArrayList;
 import java.util.Collections;

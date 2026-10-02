@@ -14,6 +14,9 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import com.theegget.eggsys.eaf.EafPackage;
+import com.theegget.eggsys.eaf.EafRegistry;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -22,6 +25,7 @@ import java.util.List;
 public class NativeLauncherActivity extends Activity {
     private LinearLayout appList;
     private final List<AppEntry> apps = new ArrayList<>();
+    private final List<EafPackage> eafApps = new ArrayList<>();
 
     private static final int BG = Color.BLACK;
     private static final int FG = Color.WHITE;
@@ -43,6 +47,7 @@ public class NativeLauncherActivity extends Activity {
 
         buildUi();
         loadApps();
+        loadEafApps();
 
         BootState.set(this, 2);
     }
@@ -106,6 +111,42 @@ public class NativeLauncherActivity extends Activity {
 
         Collections.sort(apps, Comparator.comparing(a -> a.name.toLowerCase()));
         renderApps();
+    }
+
+    private void loadEafApps() {
+        eafApps.clear();
+        eafApps.addAll(EafRegistry.list(this));
+        renderEafApps();
+    }
+
+    private void renderEafApps() {
+        if (eafApps.isEmpty()) return;
+
+        TextView header = new TextView(this);
+        header.setText("EAF APPLICATIONS");
+        header.setTextColor(FG);
+        header.setTextSize(13);
+        header.setTypeface(null, android.graphics.Typeface.BOLD);
+        header.setPadding(18, 22, 18, 10);
+        appList.addView(header);
+
+        for (EafPackage eaf : eafApps) {
+            TextView row = new TextView(this);
+            row.setText(eaf.name + "\\n" + eaf.version);
+            row.setTextColor(FG);
+            row.setTextSize(17);
+            row.setPadding(18, 16, 18, 16);
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setOnClickListener(v -> launchEaf(eaf));
+            appList.addView(row, new LinearLayout.LayoutParams(-1, -2));
+        }
+    }
+
+    private void launchEaf(EafPackage eaf) {
+        Intent intent = new Intent(this, EafRuntimeActivity.class);
+        intent.putExtra(EafRuntimeActivity.EXTRA_EAF_ID, eaf.id);
+        startActivity(intent);
     }
 
     private void renderApps() {

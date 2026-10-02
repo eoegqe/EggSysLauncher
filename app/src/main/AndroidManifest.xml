@@ -105,6 +105,24 @@
         </activity>
 
         <activity
+            android:name=".eaf.EafInstallerActivity"
+            android:exported="true"
+            android:label="Install EAF">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="application/x-eggsys-eaf" />
+                <data android:mimeType="application/octet-stream" android:pathPattern=".*\\.eaf" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".eaf.EafRuntimeActivity"
+            android:exported="false"
+            android:label="EAF Application" />
+
+        <activity
             android:name=".EggSysRecoveryActivity"
             android:exported="false"
             android:label="EggSys Recovery" />

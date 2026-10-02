@@ -9,6 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application
         android:label="@string/app_name"
@@ -16,11 +17,14 @@
         android:usesCleartextTraffic="false"
         android:allowBackup="false">
 
-        <activity android:name=".ManagerActivity" android:exported="true" android:label="EggSys Manager">
+        <activity android:name=".SetupActivity" android:exported="true" android:label="EggSys Setup">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity android:name=".ManagerActivity" android:exported="true" android:label="EggSys Manager">
         </activity>
 
         <activity
@@ -32,10 +36,6 @@
             android:name="com.eggsys.settings.MainActivity"
             android:exported="true"
             android:label="EggSys Settings">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
 
         <receiver

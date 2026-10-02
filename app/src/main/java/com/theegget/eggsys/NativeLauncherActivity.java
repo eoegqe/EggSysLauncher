@@ -7,7 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -22,12 +22,10 @@ import java.util.List;
 public class NativeLauncherActivity extends Activity {
     private LinearLayout appList;
     private final List<AppEntry> apps = new ArrayList<>();
-    private int selectedIndex = 0;
 
     private static final int BG = Color.BLACK;
     private static final int FG = Color.WHITE;
     private static final int MUTED = 0xFF9E9E9E;
-    private static final int SELECTED = 0xFF303030;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,7 +44,6 @@ public class NativeLauncherActivity extends Activity {
         buildUi();
         loadApps();
 
-        // The native launcher has reached its startup checkpoint.
         BootState.set(this, 2);
     }
 
@@ -79,7 +76,7 @@ public class NativeLauncherActivity extends Activity {
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
         TextView footer = new TextView(this);
-        footer.setText("VOLUME UP/DOWN: MOVE    BACK: SELECT");
+        footer.setText("TAP AN APP TO OPEN IT");
         footer.setTextColor(MUTED);
         footer.setTextSize(12);
         footer.setPadding(0, 18, 0, 0);
@@ -119,18 +116,19 @@ public class NativeLauncherActivity extends Activity {
             empty.setTextColor(MUTED);
             empty.setTextSize(16);
             appList.addView(empty);
-            selectedIndex = 0;
             return;
         }
 
-        if (selectedIndex >= apps.size()) selectedIndex = apps.size() - 1;
-        for (int i = 0; i < apps.size(); i++) {
-            AppEntry entry = apps.get(i);
+        PackageManager pm = getPackageManager();
+        for (AppEntry entry : apps) {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
             row.setPadding(18, 14, 18, 14);
-            row.setBackgroundColor(i == selectedIndex ? SELECTED : BG);
+            row.setBackgroundColor(BG);
+            row.setClickable(true);
+            row.setFocusable(true);
+            row.setOnClickListener(v -> launchApp(entry.packageName));
 
             ImageView icon = new ImageView(this);
             icon.setImageDrawable(entry.icon);
@@ -147,42 +145,12 @@ public class NativeLauncherActivity extends Activity {
         }
     }
 
-    private void moveSelection(int delta) {
-        if (apps.isEmpty()) return;
-        selectedIndex += delta;
-        if (selectedIndex < 0) selectedIndex = apps.size() - 1;
-        if (selectedIndex >= apps.size()) selectedIndex = 0;
-        renderApps();
-    }
-
-    private void launchSelected() {
-        if (apps.isEmpty()) return;
+    private void launchApp(String packageName) {
         try {
-            Intent intent = getPackageManager().getLaunchIntentForPackage(apps.get(selectedIndex).packageName);
+            Intent intent = getPackageManager().getLaunchIntentForPackage(packageName);
             if (intent != null) startActivity(intent);
         } catch (Exception ignored) {
         }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            moveSelection(-1);
-            return true;
-        }
-        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
-            moveSelection(1);
-            return true;
-        }
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            launchSelected();
-            return true;
-        }
-        if (keyCode == KeyEvent.KEYCODE_POWER) {
-            launchSelected();
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
     }
 
     private static final class AppEntry {

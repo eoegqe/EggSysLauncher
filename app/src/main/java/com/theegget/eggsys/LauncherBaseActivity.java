@@ -34,12 +34,12 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.core.app.NotificationCompat;
-import androidx.webkit.WebSettingsCompat;
+import androidx.webkit.WebSettingsCompat;\nimport androidx.webkit.WebViewAssetLoader;\nimport android.webkit.WebResourceResponse;\nimport java.io.InputStream;
 import androidx.webkit.WebViewFeature;
 
 public abstract class LauncherBaseActivity extends Activity {
     private static final String HOST = "web-egget-system.base44.app";
-    private static final String BASE_URL = "https://" + HOST + "/";
+    private static final String BASE_URL = "https://" + HOST + "/MobileApp";\n    private WebViewAssetLoader assetLoader;
     private static final String NOTIFICATION_CHANNEL_ID = "eggsys_web";
     private static final int NOTIFICATION_PERMISSION_REQUEST = 1003;
     private static final int WEB_PERMISSION_REQUEST = 1001;
@@ -83,7 +83,7 @@ public abstract class LauncherBaseActivity extends Activity {
                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
         }
 
-        webView = new WebView(this);
+        assetLoader = new WebViewAssetLoader.Builder()\n            .setDomain(HOST)\n            .addPathHandler("/", new WebViewAssetLoader.AssetsPathHandler(this))\n            .build();\n\n        webView = new WebView(this);
         webView.setBackgroundColor(Color.BLACK);
         setContentView(webView);
         goImmersive();
@@ -121,7 +121,7 @@ public abstract class LauncherBaseActivity extends Activity {
             }
         });
 
-        webView.setWebViewClient(new WebViewClient() {
+        webView.setWebViewClient(new WebViewClient() {\n            @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {\n                Uri uri = request.getUrl();\n                if (HOST.equals(uri.getHost())) {\n                    WebResourceResponse bundled = assetLoader.shouldInterceptRequest(uri);\n                    if (bundled != null) return bundled;\n\n                    String path = uri.getPath();\n                    if (path != null && !path.startsWith("/assets/")) {\n                        try {\n                            InputStream html = getAssets().open("index.html");\n                            return new WebResourceResponse("text/html", "UTF-8", html);\n                        } catch (Exception ignored) {}\n                    }\n                }\n                return super.shouldInterceptRequest(view, request);\n            }\n
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest req) {
                 Uri u = req.getUrl();
                 String scheme = u.getScheme();

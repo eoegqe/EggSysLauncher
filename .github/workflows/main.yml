@@ -11,12 +11,22 @@ jobs:
         with:
           path: EggSysLauncher
 
+      - name: Verify EggSysWeb access token
+        env:
+          EGGSYS_WEB_TOKEN: ${{ secrets.EGGSYS_WEB_TOKEN }}
+        run: |
+          test -n "$EGGSYS_WEB_TOKEN" || {
+            echo "::error::Add the EGGSYS_WEB_TOKEN repository secret with read-only Contents access to eoegqe/EggSysWeb."
+            exit 1
+          }
+
       - name: Checkout current EggetSystem web project
         uses: actions/checkout@v4
         with:
           repository: eoegqe/EggSysWeb
           ref: main
           path: EggSysWeb
+          token: ${{ secrets.EGGSYS_WEB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:

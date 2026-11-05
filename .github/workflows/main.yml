@@ -1,4 +1,4 @@
-name: Build APK
+name: Build EggetSystem APK
 on:
   push:
   workflow_dispatch:
@@ -8,30 +8,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: EggSysLauncher
+
+      - name: Checkout current EggetSystem web project
+        uses: actions/checkout@v4
+        with:
+          repository: eoegqe/EggSysWeb
+          ref: main
+          path: EggSysWeb
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install web dependencies
+        working-directory: EggSysWeb
+        run: npm install --no-audit --no-fund
+
+      - name: Build current EggetSystem MobileOS
+        working-directory: EggSysWeb
+        env:
+          BASE44_LEGACY_SDK_IMPORTS: "true"
+        run: npm run build
+
+      - name: Bundle web build into Android assets
+        working-directory: EggSysLauncher
+        run: |
+          test -s ../EggSysWeb/dist/index.html
+          mkdir -p app/src/main/assets
+          cp -R ../EggSysWeb/dist/. app/src/main/assets/
+          test -s app/src/main/assets/index.html
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           packages: 'cmdline-tools;latest build-tools;35.0.0 platforms;android-35'
+
       - name: Accept Android SDK Licenses
         run: |
           yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses
+
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
+
       - name: Build APK
+        working-directory: EggSysLauncher
         run: gradle clean assembleDebug --no-daemon
+
       - name: Verify APK
+        working-directory: EggSysLauncher
         run: |
           APK=app/build/outputs/apk/debug/app-debug.apk
           test -s "$APK"
           "$ANDROID_SDK_ROOT/build-tools/35.0.0/zipalign" -c -v 4 "$APK"
           "$ANDROID_SDK_ROOT/build-tools/35.0.0/apksigner" verify --verbose "$APK"
           "$ANDROID_SDK_ROOT/build-tools/35.0.0/aapt" dump badging "$APK" | head -n 5
+
       - uses: actions/upload-artifact@v4
         with:
-          name: EggSys-Manager-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: EggetSystem-Android-APK
+          path: EggSysLauncher/app/build/outputs/apk/debug/app-debug.apk

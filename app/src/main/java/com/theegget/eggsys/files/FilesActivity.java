@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.webkit.MimeTypeMap;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -63,8 +64,7 @@ public final class FilesActivity extends Activity {
         buildScreen();
         if (Build.VERSION.SDK_INT >= 23 &&
                 checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_STORAGE);
+            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_STORAGE);
         } else {
             showDirectory(currentDirectory);
         }
@@ -214,7 +214,9 @@ public final class FilesActivity extends Activity {
         try {
             Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", file);
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, getContentResolver().getType(uri));
+            String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(file.getName());
+            String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.toLowerCase());
+            intent.setDataAndType(uri, type == null ? "*/*" : type);
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             startActivity(intent);
         } catch (Exception e) {
@@ -225,6 +227,8 @@ public final class FilesActivity extends Activity {
     private void hideSamsungFilesIfAvailable() {
         DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         if (dpm == null || !dpm.isDeviceOwnerApp(getPackageName())) return;
+        android.content.SharedPreferences prefs = getSharedPreferences("eggsys_files", MODE_PRIVATE);
+        if (prefs.getBoolean("default_managers_configured", false)) return;
         ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
         for (String packageName : DEFAULT_FILE_MANAGERS) {
             if (!isPackageInstalled(packageName)) continue;
@@ -233,6 +237,7 @@ public final class FilesActivity extends Activity {
             } catch (Exception ignored) {
             }
         }
+        prefs.edit().putBoolean("default_managers_configured", true).apply();
     }
 
     private void toggleSamsungFiles() {
@@ -260,6 +265,8 @@ public final class FilesActivity extends Activity {
             for (String packageName : DEFAULT_FILE_MANAGERS) {
                 if (isPackageInstalled(packageName)) dpm.setApplicationHidden(admin, packageName, !restore);
             }
+            getSharedPreferences("eggsys_files", MODE_PRIVATE).edit()
+                    .putBoolean("default_managers_configured", true).apply();
             Toast.makeText(this, restore ? "Default file manager apps restored." : "Default file manager apps hidden.", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Couldn't change the default file manager.", Toast.LENGTH_LONG).show();

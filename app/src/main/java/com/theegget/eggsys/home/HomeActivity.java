@@ -197,7 +197,7 @@ public final class HomeActivity extends Activity {
             appGrid.addView(createAppTile(info, label));
             shown++;
         }
-        appCount.setText(shown + (shown == 1 ? " APP" : " APPS"));
+        if (appCount != null) appCount.setText(shown + (shown == 1 ? " APP" : " APPS"));
         emptyState.setVisibility(shown == 0 ? View.VISIBLE : View.GONE);
         emptyState.setText(needle.isEmpty()
                 ? "No launchable applications found"

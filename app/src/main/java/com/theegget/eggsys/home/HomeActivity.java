@@ -67,103 +67,49 @@ public final class HomeActivity extends Activity {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(BACKGROUND);
-        root.setPadding(dp(26), dp(22), dp(26), dp(14));
+        root.setPadding(dp(20), dp(18), dp(20), dp(12));
 
-        LinearLayout brandRow = new LinearLayout(this);
-        brandRow.setGravity(Gravity.CENTER_VERTICAL);
-        brandRow.setOrientation(LinearLayout.HORIZONTAL);
-
-        LinearLayout brandMark = new LinearLayout(this);
-        brandMark.setGravity(Gravity.CENTER);
-        brandMark.setBackground(rounded(ACCENT_DARK, dp(15)));
-        TextView mark = new TextView(this);
-        mark.setText("E");
-        mark.setTextColor(TEXT);
-        mark.setTextSize(21);
-        mark.setTypeface(Typeface.create("sans-serif-black", Typeface.NORMAL));
-        brandMark.addView(mark);
-        brandRow.addView(brandMark, new LinearLayout.LayoutParams(dp(44), dp(44)));
-
-        LinearLayout brandText = new LinearLayout(this);
-        brandText.setOrientation(LinearLayout.VERTICAL);
-        brandText.setPadding(dp(12), 0, 0, 0);
-        TextView brand = new TextView(this);
-        brand.setText("EggSys");
-        brand.setTextColor(TEXT);
-        brand.setTextSize(21);
-        brand.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        brandText.addView(brand);
-        TextView subtitle = new TextView(this);
-        subtitle.setText("MOBILE");
-        subtitle.setTextColor(MUTED);
-        subtitle.setTextSize(9);
-        subtitle.setLetterSpacing(0.18f);
-        brandText.addView(subtitle);
-        brandRow.addView(brandText, new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-
-        TextView status = new TextView(this);
-        status.setText("●  READY");
-        status.setTextColor(Color.rgb(135, 211, 171));
-        status.setTextSize(10);
-        status.setLetterSpacing(0.08f);
-        status.setPadding(dp(12), dp(8), dp(12), dp(8));
-        status.setBackground(rounded(Color.rgb(24, 53, 48), dp(30)));
-        brandRow.addView(status);
-        root.addView(brandRow);
-
-        LinearLayout hero = new LinearLayout(this);
-        hero.setOrientation(LinearLayout.VERTICAL);
-        hero.setPadding(dp(22), dp(18), dp(22), dp(18));
-        hero.setBackground(gradient(
-                new int[]{Color.rgb(38, 54, 84), Color.rgb(24, 32, 49)},
-                dp(22), GradientDrawable.Orientation.TL_BR));
-        LinearLayout.LayoutParams heroParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        heroParams.topMargin = dp(24);
-        root.addView(hero, heroParams);
-
-        TextView greeting = new TextView(this);
-        greeting.setText("YOUR SPACE");
-        greeting.setTextColor(Color.rgb(183, 199, 232));
-        greeting.setTextSize(10);
-        greeting.setLetterSpacing(0.16f);
-        hero.addView(greeting);
+        LinearLayout clockArea = new LinearLayout(this);
+        clockArea.setOrientation(LinearLayout.VERTICAL);
+        clockArea.setGravity(Gravity.CENTER);
+        clockArea.setMinimumHeight(dp(220));
+        LinearLayout.LayoutParams clockAreaParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f);
+        root.addView(clockArea, clockAreaParams);
 
         TextClock clock = new TextClock(this);
         clock.setFormat12Hour("h:mm");
         clock.setFormat24Hour("HH:mm");
         clock.setTextColor(TEXT);
-        clock.setTextSize(42);
+        clock.setTextSize(68);
+        clock.setGravity(Gravity.CENTER);
         clock.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        LinearLayout.LayoutParams clockParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        clockParams.topMargin = dp(3);
-        hero.addView(clock, clockParams);
+        clockArea.addView(clock);
 
         TextClock date = new TextClock(this);
         date.setFormat12Hour("EEEE, MMMM d");
         date.setFormat24Hour("EEEE, MMMM d");
-        date.setTextColor(Color.rgb(190, 201, 222));
-        date.setTextSize(13);
+        date.setTextColor(MUTED);
+        date.setTextSize(15);
+        date.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams dateParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dateParams.topMargin = dp(1);
-        hero.addView(date, dateParams);
+        dateParams.topMargin = dp(2);
+        clockArea.addView(date, dateParams);
 
         LinearLayout searchContainer = new LinearLayout(this);
         searchContainer.setGravity(Gravity.CENTER_VERTICAL);
-        searchContainer.setPadding(dp(15), 0, dp(14), 0);
-        searchContainer.setBackground(rounded(SURFACE_LIGHT, dp(15)));
-        LinearLayout.LayoutParams searchContainerParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(52));
-        searchContainerParams.topMargin = dp(22);
-        root.addView(searchContainer, searchContainerParams);
+        searchContainer.setPadding(dp(16), 0, dp(14), 0);
+        searchContainer.setBackground(rounded(SURFACE_LIGHT, dp(28)));
+        LinearLayout.LayoutParams searchParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(50));
+        searchParams.bottomMargin = dp(14);
+        root.addView(searchContainer, searchParams);
 
         TextView searchIcon = new TextView(this);
         searchIcon.setText("⌕");
         searchIcon.setTextColor(MUTED);
-        searchIcon.setTextSize(27);
+        searchIcon.setTextSize(25);
         searchContainer.addView(searchIcon);
 
         searchField = new EditText(this);
@@ -171,74 +117,27 @@ public final class HomeActivity extends Activity {
         searchField.setTextSize(14);
         searchField.setTextColor(TEXT);
         searchField.setHintTextColor(MUTED);
-        searchField.setHint("Find an app");
+        searchField.setHint("Search apps");
         searchField.setBackgroundColor(Color.TRANSPARENT);
         searchField.setPadding(dp(9), 0, 0, 0);
         searchField.setSelectAllOnFocus(false);
         searchContainer.addView(searchField, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.MATCH_PARENT, 1f));
 
-        TextView systemTitle = new TextView(this);
-        systemTitle.setText("EggSys System Apps");
-        systemTitle.setTextColor(TEXT);
-        systemTitle.setTextSize(18);
-        systemTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        LinearLayout.LayoutParams systemTitleParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        systemTitleParams.topMargin = dp(24);
-        root.addView(systemTitle, systemTitleParams);
-
-        TextView systemHint = new TextView(this);
-        systemHint.setText("Built into your EggSys environment");
-        systemHint.setTextColor(MUTED);
-        systemHint.setTextSize(11);
-        LinearLayout.LayoutParams systemHintParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        systemHintParams.topMargin = dp(4);
-        systemHintParams.bottomMargin = dp(11);
-        root.addView(systemHint, systemHintParams);
-
         GridLayout systemGrid = new GridLayout(this);
         systemGrid.setColumnCount(2);
         systemGrid.setUseDefaultMargins(false);
-        systemGrid.addView(createSystemTile("EggSys Settings", "Personalize your device", "S",
+        systemGrid.addView(createSystemTile("EggSys Settings", "", "S",
                 "com.eggsys.settings.MainActivity"));
-        systemGrid.addView(createSystemTile("EggSys Manager", "Manage EggSys features", "M",
+        systemGrid.addView(createSystemTile("EggSys Manager", "", "M",
                 "com.theegget.eggsys.ManagerActivity"));
-        root.addView(systemGrid, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        TextView sectionTitle = new TextView(this);
-        sectionTitle.setText("Applications");
-        sectionTitle.setTextColor(TEXT);
-        sectionTitle.setTextSize(18);
-        sectionTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        LinearLayout.LayoutParams sectionParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        sectionParams.topMargin = dp(25);
-        root.addView(sectionTitle, sectionParams);
-
-        LinearLayout sectionRow = new LinearLayout(this);
-        sectionRow.setGravity(Gravity.CENTER_VERTICAL);
-        TextView sectionHint = new TextView(this);
-        sectionHint.setText("Everything installed on your device");
-        sectionHint.setTextColor(MUTED);
-        sectionHint.setTextSize(11);
-        sectionRow.addView(sectionHint, new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        appCount = new TextView(this);
-        appCount.setTextColor(ACCENT);
-        appCount.setTextSize(11);
-        appCount.setTypeface(Typeface.DEFAULT_BOLD);
-        sectionRow.addView(appCount);
-        LinearLayout.LayoutParams sectionRowParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams systemGridParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        sectionRowParams.topMargin = dp(4);
-        sectionRowParams.bottomMargin = dp(13);
-        root.addView(sectionRow, sectionRowParams);
+        systemGridParams.bottomMargin = dp(10);
+        root.addView(systemGrid, systemGridParams);
 
         ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
+        scroll.setFillViewport(false);
         scroll.setClipToPadding(false);
         appGrid = new GridLayout(this);
         appGrid.setColumnCount(getColumnCount());
@@ -246,6 +145,8 @@ public final class HomeActivity extends Activity {
         appGrid.setUseDefaultMargins(false);
         scroll.addView(appGrid, new ScrollView.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        root.addView(scroll, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         emptyState = new TextView(this);
         emptyState.setTextColor(MUTED);
@@ -253,29 +154,10 @@ public final class HomeActivity extends Activity {
         emptyState.setGravity(Gravity.CENTER);
         emptyState.setVisibility(View.GONE);
         emptyState.setBackground(rounded(SURFACE, dp(18)));
-
-        LinearLayout appArea = new LinearLayout(this);
-        appArea.setOrientation(LinearLayout.VERTICAL);
-        appArea.addView(scroll, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         LinearLayout.LayoutParams emptyParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(92));
-        emptyParams.topMargin = dp(4);
-        appArea.addView(emptyState, emptyParams);
-        root.addView(appArea, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
-
-        LinearLayout footer = new LinearLayout(this);
-        footer.setGravity(Gravity.CENTER);
-        footer.setPadding(0, dp(10), 0, dp(2));
-        TextView footerText = new TextView(this);
-        footerText.setText("EGGSYS  •  HOME");
-        footerText.setTextColor(Color.rgb(91, 103, 125));
-        footerText.setTextSize(9);
-        footerText.setLetterSpacing(0.16f);
-        footer.addView(footerText);
-        root.addView(footer, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(28)));
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(70));
+        emptyParams.topMargin = dp(6);
+        root.addView(emptyState, emptyParams);
 
         searchField.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }

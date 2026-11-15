@@ -40,7 +40,15 @@ public final class FilesActivity extends Activity {
     private static final int MUTED = Color.rgb(151, 163, 184);
     private static final int ACCENT = Color.rgb(139, 169, 255);
     private static final int REQUEST_STORAGE = 40;
-    private static final String SAMSUNG_FILES = "com.sec.android.app.myfiles";
+    private static final String[] DEFAULT_FILE_MANAGERS = {
+            "com.sec.android.app.myfiles",
+            "com.google.android.apps.nbu.files",
+            "com.mi.android.globalFileexplorer",
+            "com.coloros.filemanager",
+            "com.vivo.filemanager",
+            "com.huawei.hidisk",
+            "com.motorola.filemanager"
+    };
 
     private LinearLayout list;
     private TextView location;
@@ -217,11 +225,13 @@ public final class FilesActivity extends Activity {
     private void hideSamsungFilesIfAvailable() {
         DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         if (dpm == null || !dpm.isDeviceOwnerApp(getPackageName())) return;
-        if (!isPackageInstalled(SAMSUNG_FILES)) return;
-        try {
-            dpm.setApplicationHidden(new ComponentName(this, EggSysDeviceAdminReceiver.class),
-                    SAMSUNG_FILES, true);
-        } catch (Exception ignored) {
+        ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
+        for (String packageName : DEFAULT_FILE_MANAGERS) {
+            if (!isPackageInstalled(packageName)) continue;
+            try {
+                dpm.setApplicationHidden(admin, packageName, true);
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -231,15 +241,26 @@ public final class FilesActivity extends Activity {
             Toast.makeText(this, "EggSys must be the device owner to manage the default file manager.", Toast.LENGTH_LONG).show();
             return;
         }
-        if (!isPackageInstalled(SAMSUNG_FILES)) {
-            Toast.makeText(this, "Samsung My Files was not found. Android's system file picker was left enabled.", Toast.LENGTH_LONG).show();
+        ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
+        boolean found = false;
+        boolean restore = false;
+        for (String packageName : DEFAULT_FILE_MANAGERS) {
+            if (!isPackageInstalled(packageName)) continue;
+            found = true;
+            try {
+                if (dpm.isApplicationHidden(admin, packageName)) restore = true;
+            } catch (Exception ignored) {
+            }
+        }
+        if (!found) {
+            Toast.makeText(this, "No supported standalone file manager was found. Android's system file picker remains enabled.", Toast.LENGTH_LONG).show();
             return;
         }
         try {
-            ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
-            boolean hidden = dpm.isApplicationHidden(admin, SAMSUNG_FILES);
-            dpm.setApplicationHidden(admin, SAMSUNG_FILES, !hidden);
-            Toast.makeText(this, !hidden ? "Samsung My Files hidden." : "Samsung My Files restored.", Toast.LENGTH_LONG).show();
+            for (String packageName : DEFAULT_FILE_MANAGERS) {
+                if (isPackageInstalled(packageName)) dpm.setApplicationHidden(admin, packageName, !restore);
+            }
+            Toast.makeText(this, restore ? "Default file manager apps restored." : "Default file manager apps hidden.", Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Couldn't change the default file manager.", Toast.LENGTH_LONG).show();
         }

@@ -247,16 +247,12 @@ public class SetupActivity extends Activity {
                 ? "All required setup checks are complete."
                 : "Complete each required step to continue.");
 
-        LinearLayout navigation = new LinearLayout(this);
-        navigation.setOrientation(LinearLayout.HORIZONTAL);
-        navigation.setGravity(Gravity.CENTER_VERTICAL);
         if (currentPage > 0) {
             Button back = addButton("Back");
             back.setOnClickListener(v -> {
                 currentPage--;
                 refreshSetupState();
             });
-            navigation.addView(back, new LinearLayout.LayoutParams(0, -2, 1));
         }
         if (currentPage < pageNames.length - 1) {
             Button next = addButton(currentPage == 0 ? "Get started" : "Continue");
@@ -264,9 +260,7 @@ public class SetupActivity extends Activity {
                 currentPage++;
                 refreshSetupState();
             });
-            navigation.addView(next, new LinearLayout.LayoutParams(0, -2, 1));
         }
-        content.addView(navigation);
     }
 
     private void addStep(String title, String state) {

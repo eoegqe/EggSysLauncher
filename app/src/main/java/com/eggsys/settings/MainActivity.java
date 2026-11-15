@@ -1,10 +1,13 @@
 package com.eggsys.settings;
 
 import android.app.Activity;
+import android.app.DownloadManager;
 import android.app.AlertDialog;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
@@ -19,6 +22,16 @@ import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.theegget.eggsys.BuildConfig;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 public class MainActivity extends Activity {
     private static final int BG = Color.rgb(10, 13, 20);
@@ -195,6 +208,8 @@ public class MainActivity extends Activity {
             addAction("EggSys Manager", "Open device management", "Open", v -> openManager());
             addAction("EggSys Keyboard", "Configure the system keyboard", "Open", v ->
                     openKeyboardSettings());
+            addAction("System Update", "Check GitHub for EggSys releases", "Check", v ->
+                    checkForEggSysUpdate());
             addCardTitle("About EggSys", "EggSys Settings  •  Part of EggSys OS");
             DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
             boolean owner = dpm != null && dpm.isDeviceOwnerApp(getPackageName());
@@ -219,6 +234,132 @@ public class MainActivity extends Activity {
                                     }
                                 }).show());
             }
+        }
+    }
+
+    private void checkForEggSysUpdate() {
+        Toast.makeText(this, "Checking GitHub for EggSys updates...", Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL("https://api.github.com/repos/eoegqe/EggSysLauncher/releases/latest");
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(15000);
+                connection.setRequestProperty("Accept", "application/vnd.github+json");
+                connection.setRequestProperty("X-GitHub-Api-Version", "2022-11-28");
+
+                int response = connection.getResponseCode();
+                if (response == 404) {
+                    runOnUiThread(() -> showUpdateMessage("No EggSys releases yet",
+                            "GitHub does not have a published release for EggSys. Once an APK is attached to a GitHub Release, it will appear here."));
+                    return;
+                }
+                if (response != HttpURLConnection.HTTP_OK) {
+                    throw new Exception("GitHub returned HTTP " + response);
+                }
+
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(connection.getInputStream()));
+                StringBuilder body = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) body.append(line);
+                reader.close();
+
+                JSONObject release = new JSONObject(body.toString());
+                String tag = release.optString("tag_name", "Unknown");
+                String title = release.optString("name", tag);
+                String notes = release.optString("body", "No release notes were provided.");
+                String page = release.optString("html_url", "https://github.com/eoegqe/EggSysLauncher/releases");
+                JSONArray assets = release.optJSONArray("assets");
+                String apkUrl = null;
+                String apkName = null;
+                if (assets != null) {
+                    for (int i = 0; i < assets.length(); i++) {
+                        JSONObject asset = assets.optJSONObject(i);
+                        if (asset == null) continue;
+                        String name = asset.optString("name", "");
+                        if (name.toLowerCase().endsWith(".apk")) {
+                            apkName = name;
+                            apkUrl = asset.optString("browser_download_url", null);
+                            break;
+                        }
+                    }
+                }
+
+                String current = BuildConfig.VERSION_NAME;
+                String normalizedTag = tag.startsWith("v") || tag.startsWith("V")
+                        ? tag.substring(1) : tag;
+                boolean sameVersion = normalizedTag.equalsIgnoreCase(current);
+                String finalApkUrl = apkUrl;
+                String finalApkName = apkName;
+                runOnUiThread(() -> {
+                    if (sameVersion) {
+                        showUpdateMessage("EggSys is up to date",
+                                "Installed version: " + current + "\nLatest GitHub release: " + tag);
+                    } else if (finalApkUrl == null || finalApkName == null) {
+                        showUpdateMessage("Release found, but no APK is attached",
+                                title + " (" + tag + ")\n\n" + notes
+                                        + "\n\nOpen the release page: " + page);
+                    } else {
+                        new AlertDialog.Builder(this)
+                                .setTitle("EggSys update available")
+                                .setMessage("Installed: " + current + "\nAvailable: " + tag
+                                        + "\n\n" + notes)
+                                .setNegativeButton("Later", null)
+                                .setNeutralButton("Release page", (dialog, which) ->
+                                        openSettingsUrl(page))
+                                .setPositiveButton("Download APK", (dialog, which) ->
+                                        downloadEggSysApk(finalApkUrl, finalApkName))
+                                .show();
+                    }
+                });
+            } catch (Exception e) {
+                String message = e.getMessage() == null ? "Unknown network error" : e.getMessage();
+                runOnUiThread(() -> showUpdateMessage("Update check failed", message));
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }).start();
+    }
+
+    private void downloadEggSysApk(String url, String fileName) {
+        try {
+            DownloadManager manager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+            if (manager == null) {
+                showUpdateMessage("Download unavailable", "Android Download Manager is unavailable.");
+                return;
+            }
+            DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+            request.setTitle("EggSys update");
+            request.setDescription("Downloading " + fileName);
+            request.setMimeType("application/vnd.android.package-archive");
+            request.setNotificationVisibility(
+                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+            manager.enqueue(request);
+            showUpdateMessage("Download started",
+                    "The EggSys APK is downloading. When it finishes, open the download notification or the APK in Downloads to install it manually. Do not uninstall the existing EggSys app first.");
+        } catch (Exception e) {
+            showUpdateMessage("Download failed",
+                    e.getMessage() == null ? "Android could not start the download." : e.getMessage());
+        }
+    }
+
+    private void showUpdateMessage(String title, String message) {
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
+    }
+
+    private void openSettingsUrl(String url) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            showUpdateMessage("Unable to open link", url);
         }
     }
 

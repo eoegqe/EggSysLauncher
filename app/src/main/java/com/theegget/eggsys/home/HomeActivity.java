@@ -205,10 +205,6 @@ public final class HomeActivity extends Activity {
                 "com.eggsys.settings.MainActivity"));
         systemGrid.addView(createSystemTile("EggSys Manager", "Manage EggSys features", "M",
                 "com.theegget.eggsys.ManagerActivity"));
-        systemGrid.addView(createSystemTile("Boot Settings", "Startup and boot options", "B",
-                "com.theegget.eggsys.bootsettings.MainActivity"));
-        systemGrid.addView(createSystemTile("EggSys Setup", "Setup and recovery options", "E",
-                "com.theegget.eggsys.SetupActivity"));
         root.addView(systemGrid, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 

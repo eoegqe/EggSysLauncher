@@ -136,8 +136,19 @@ public class SetupActivity extends Activity {
         addStep("1. EggSys core environment", "Setup, Manager, Settings, Launcher and Recovery are part of this installed EggSys package.");
         addStep("2. Device Owner", deviceOwnerStatus());
         if (!deviceOwnerReady()) {
-            addStep("Run this command on your computer",
-                    "Connect the phone with USB debugging enabled. Run this command from your computer's terminal. Device Owner must be assigned before adding accounts to Android.");
+            addStep("Prepare your computer",
+                    "Install Android SDK Platform-Tools on your computer first. This package includes ADB, the command-line tool EggSys needs. Download the Windows ZIP, extract the platform-tools folder, and keep it on your computer.");
+            Button platformTools = addButton("Download Android Platform-Tools");
+            platformTools.setOnClickListener(v -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://developer.android.com/tools/releases/platform-tools")));
+                } catch (Exception ignored) {
+                    status.setText("Open developer.android.com/tools/releases/platform-tools on your computer.");
+                }
+            });
+            addStep("Run Device Owner command from Windows",
+                    "On your computer, connect this phone by USB and enable USB debugging in Developer options. Accept the USB debugging prompt on the phone. Open the extracted platform-tools folder, click its address bar, type cmd, and press Enter. In the Command Prompt window, type the command shown below and press Enter. Do not run this command on the phone.");
             TextView command = new TextView(this);
             command.setText(DEVICE_OWNER_COMMAND);
             command.setTextColor(0xFFE8EDFA);
@@ -148,8 +159,8 @@ public class SetupActivity extends Activity {
             LinearLayout.LayoutParams commandParams = new LinearLayout.LayoutParams(-1, -2);
             commandParams.bottomMargin = 8;
             content.addView(command, commandParams);
-            Button copyCommand = addButton("Copy ADB command");
-            copyCommand.setOnClickListener(v -> copyDeviceOwnerCommand());
+            Button checkOwner = addButton("I've run the command — Check again");
+            checkOwner.setOnClickListener(v -> refreshSetupState());
         } else {
             addStep("ADB provisioning", "Device Owner is active. EggSys can now configure supported device policies.");
         }
@@ -172,9 +183,6 @@ public class SetupActivity extends Activity {
 
         Button write = addButton("Allow modify system settings");
         write.setOnClickListener(v -> openWriteSettings());
-
-        Button checkOwner = addButton("Recheck Device Owner status");
-        checkOwner.setOnClickListener(v -> refreshSetupState());
 
         Button download = addButton(isUptodownInstalled()
                 ? "Uptodown App Store is installed"
@@ -320,18 +328,6 @@ public class SetupActivity extends Activity {
             startActivity(new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS,
                     Uri.parse("package:" + getPackageName())));
         } catch (Exception ignored) {}
-    }
-
-    private void copyDeviceOwnerCommand() {
-        android.content.ClipboardManager clipboard =
-                (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-        if (clipboard == null) {
-            status.setText("Clipboard is unavailable. Select and copy the command above.");
-            return;
-        }
-        clipboard.setPrimaryClip(android.content.ClipData.newPlainText(
-                "EggSys Device Owner command", DEVICE_OWNER_COMMAND));
-        status.setText("ADB command copied. Run it on your computer, then return here.");
     }
 
     private boolean isUptodownInstalled() {

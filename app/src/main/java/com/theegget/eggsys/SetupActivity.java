@@ -89,7 +89,7 @@ public class SetupActivity extends Activity {
         root.setBackgroundColor(0xFF000000);
 
         TextView title = new TextView(this);
-        title.setText("EggSys Setup");
+        title.setText("EggSys");
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(30);
         title.setGravity(Gravity.CENTER);
@@ -97,7 +97,8 @@ public class SetupActivity extends Activity {
         root.addView(title, new LinearLayout.LayoutParams(-1, -2));
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Preparing EggSysOS");
+        subtitle.setText("DEVICE SETUP");
+        subtitle.setLetterSpacing(0.16f);
         subtitle.setTextColor(0xFFBDBDBD);
         subtitle.setTextSize(16);
         subtitle.setGravity(Gravity.CENTER);
@@ -179,15 +180,25 @@ public class SetupActivity extends Activity {
         item.setText(title + "\n" + state);
         item.setTextColor(0xFFFFFFFF);
         item.setTextSize(16);
-        item.setPadding(14, 14, 14, 14);
-        content.addView(item);
+        item.setPadding(18, 15, 18, 15);
+        item.setBackground(rounded(0xFF171F2D, 18));
+        LinearLayout.LayoutParams itemParams = new LinearLayout.LayoutParams(-1, -2);
+        itemParams.bottomMargin = 9;
+        content.addView(item, itemParams);
     }
 
     private Button addButton(String text) {
         Button button = new Button(this);
         button.setText(text);
+        button.setAllCaps(false);
+        button.setTextColor(0xFFF5F7FC);
+        button.setTextSize(14);
+        button.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
+        button.setPadding(18, 13, 18, 13);
+        button.setBackground(rounded(0xFF304168, 16));
+        button.setElevation(dp(2));
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
-        p.topMargin = 8;
+        p.topMargin = 7;
         content.addView(button, p);
         return button;
     }
@@ -474,6 +485,18 @@ public class SetupActivity extends Activity {
                 }
             }
         } catch (Exception ignored) {}
+    }
+
+    private android.graphics.drawable.GradientDrawable rounded(int color, int radiusDp) {
+        android.graphics.drawable.GradientDrawable drawable =
+                new android.graphics.drawable.GradientDrawable();
+        drawable.setColor(color);
+        drawable.setCornerRadius(dp(radiusDp));
+        return drawable;
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private boolean canFinishSetup() {

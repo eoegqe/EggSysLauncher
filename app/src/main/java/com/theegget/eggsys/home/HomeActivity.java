@@ -2,6 +2,7 @@ package com.theegget.eggsys.home;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.ComponentName;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -427,7 +428,9 @@ public final class HomeActivity extends Activity {
 
         tile.setOnClickListener(v -> {
             Intent launch = new Intent();
-            launch.setClassName(getPackageName(), activityClass);
+            int separator = activityClass.lastIndexOf('.');
+            String packageName = activityClass.substring(0, separator);
+            launch.setComponent(new ComponentName(packageName, activityClass));
             try {
                 startActivity(launch);
             } catch (Exception ignored) {

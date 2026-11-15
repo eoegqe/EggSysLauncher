@@ -403,8 +403,7 @@ public class SetupActivity extends Activity {
 
             int scanned = 0;
             for (ApplicationInfo app : apps) {
-                if (!pm.getApplicationEnabledSetting(app.packageName) ==
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                if (!app.enabled) {
                     continue;
                 }
                 if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;

@@ -54,6 +54,8 @@ public final class FilesActivity extends Activity {
     private LinearLayout list;
     private TextView location;
     private File currentDirectory;
+    private boolean pickerMode;
+    private String requestedMimeType;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -61,6 +63,8 @@ public final class FilesActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         currentDirectory = Environment.getExternalStorageDirectory();
+        pickerMode = Intent.ACTION_GET_CONTENT.equals(getIntent().getAction());
+        requestedMimeType = getIntent().getType();
         buildScreen();
         if (Build.VERSION.SDK_INT >= 23 &&
                 checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -80,17 +84,19 @@ public final class FilesActivity extends Activity {
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = new TextView(this);
-        title.setText("EggSys Files");
+        title.setText(pickerMode ? "Select a file" : "EggSys Files");
         title.setTextColor(TEXT);
         title.setTextSize(28);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
         top.addView(title, new LinearLayout.LayoutParams(0, -2, 1f));
 
         Button refresh = new Button(this);
-        refresh.setText("Refresh");
+        refresh.setText(pickerMode ? "Cancel" : "Refresh");
         refresh.setTextColor(ACCENT);
         refresh.setAllCaps(false);
-        refresh.setOnClickListener(v -> showDirectory(currentDirectory));
+        refresh.setOnClickListener(v -> {
+            if (pickerMode) finish(); else showDirectory(currentDirectory);
+        });
         top.addView(refresh);
         root.addView(top);
 
@@ -121,6 +127,7 @@ public final class FilesActivity extends Activity {
         root.addView(parent, parentParams);
 
         Button systemFiles = new Button(this);
+        systemFiles.setVisibility(pickerMode ? View.GONE : View.VISIBLE);
         systemFiles.setText("Hide / restore default file manager");
         systemFiles.setAllCaps(false);
         systemFiles.setTextColor(MUTED);
@@ -180,7 +187,7 @@ public final class FilesActivity extends Activity {
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
         labels.addView(name);
         TextView meta = new TextView(this);
-        meta.setText(file.isDirectory() ? "Folder" : formatSize(file.length()));
+        meta.setText(file.isDirectory() ? "Folder" : (isEditableText(file) ? "Text file · Tap to edit · " : "") + formatSize(file.length()));
         meta.setTextColor(MUTED);
         meta.setTextSize(11);
         labels.addView(meta);
@@ -189,8 +196,12 @@ public final class FilesActivity extends Activity {
         row.setOnClickListener(v -> {
             if (file.isDirectory()) {
                 showDirectory(file);
+            } else if (pickerMode) {
+                returnSelectedFile(file);
             } else if (file.getName().toLowerCase().endsWith(".eaf")) {
                 installEaf(file);
+            } else if (isEditableText(file)) {
+                openEditor(file);
             } else {
                 openFile(file);
             }
@@ -199,6 +210,39 @@ public final class FilesActivity extends Activity {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(62));
         params.bottomMargin = dp(7);
         list.addView(row, params);
+    }
+
+    private boolean isEditableText(File file) {
+        String name = file.getName().toLowerCase(java.util.Locale.ROOT);
+        String[] extensions = {".txt", ".md", ".html", ".htm", ".css", ".js", ".json", ".xml", ".java", ".kt", ".gradle", ".properties", ".yml", ".yaml", ".csv", ".log", ".sh", ".py", ".c", ".cpp", ".h"};
+        for (String extension : extensions) if (name.endsWith(extension)) return true;
+        return false;
+    }
+
+    private void returnSelectedFile(File file) {
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", file);
+            Intent result = new Intent();
+            result.setData(uri);
+            result.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            setResult(RESULT_OK, result);
+            finish();
+        } catch (Exception e) {
+            Toast.makeText(this, "Couldn't select this file.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void openEditor(File file) {
+        try {
+            Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", file);
+            Intent intent = new Intent(this, FileEditorActivity.class);
+            intent.setDataAndType(uri, "text/plain");
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            intent.putExtra("file_name", file.getName());
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "This file can't be edited.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void installEaf(File file) {

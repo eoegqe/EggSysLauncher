@@ -48,7 +48,8 @@ public final class FilesActivity extends Activity {
             "com.coloros.filemanager",
             "com.vivo.filemanager",
             "com.huawei.hidisk",
-            "com.motorola.filemanager"
+            "com.motorola.filemanager",
+            "com.android.providers.downloads.ui"
     };
 
     private LinearLayout list;

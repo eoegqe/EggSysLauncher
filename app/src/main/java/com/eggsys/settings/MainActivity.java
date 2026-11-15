@@ -291,7 +291,7 @@ public class MainActivity extends Activity {
                 String current = BuildConfig.VERSION_NAME;
                 String normalizedTag = tag.startsWith("v") || tag.startsWith("V")
                         ? tag.substring(1) : tag;
-                boolean sameVersion = normalizedTag.equalsIgnoreCase(current);
+                boolean sameVersion = compareVersions(normalizedTag, current) <= 0;
                 String finalApkUrl = apkUrl;
                 String finalApkName = apkName;
                 runOnUiThread(() -> {
@@ -322,6 +322,22 @@ public class MainActivity extends Activity {
                 if (connection != null) connection.disconnect();
             }
         }).start();
+    }
+
+    private int compareVersions(String first, String second) {
+        try {
+            String[] a = first.split("[.-]");
+            String[] b = second.split("[.-]");
+            int count = Math.max(a.length, b.length);
+            for (int i = 0; i < count; i++) {
+                int left = i < a.length ? Integer.parseInt(a[i].replaceAll("[^0-9].*$", "")) : 0;
+                int right = i < b.length ? Integer.parseInt(b[i].replaceAll("[^0-9].*$", "")) : 0;
+                if (left != right) return Integer.compare(left, right);
+            }
+        } catch (Exception ignored) {
+            return first.compareToIgnoreCase(second);
+        }
+        return 0;
     }
 
     private void downloadEggSysApk(String url, String fileName) {

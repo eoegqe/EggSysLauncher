@@ -24,8 +24,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".ManagerActivity" android:exported="true" android:label="EggSys Manager">
-        </activity>
+        <activity android:name=".ManagerActivity" android:exported="true" android:label="EggSys Manager" />
 
         <activity
             android:name="com.theegget.eggsys.bootsettings.MainActivity"
@@ -35,8 +34,7 @@
         <activity
             android:name="com.eggsys.settings.MainActivity"
             android:exported="true"
-            android:label="EggSys Settings">
-        </activity>
+            android:label="EggSys Settings" />
 
         <receiver
             android:name=".EggSysDeviceAdminReceiver"
@@ -72,15 +70,16 @@
         </service>
 
         <activity
-            android:name=".BootSequenceActivity"
+            android:name=".home.HomeActivity"
             android:exported="true"
             android:launchMode="singleTask"
-            android:label="@string/app_name"
+            android:label="EggSys Launcher"
             android:configChanges="orientation|screenSize|keyboardHidden|smallestScreenSize|screenLayout">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 

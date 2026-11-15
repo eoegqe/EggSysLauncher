@@ -67,8 +67,12 @@ public final class FilesActivity extends Activity {
         requestedMimeType = getIntent().getType();
         buildScreen();
         if (Build.VERSION.SDK_INT >= 23 &&
-                checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_STORAGE);
+                (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                        || checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)) {
+            requestPermissions(new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, REQUEST_STORAGE);
         } else {
             showDirectory(currentDirectory);
         }
@@ -160,7 +164,10 @@ public final class FilesActivity extends Activity {
             addMessage("This folder is empty.");
             return;
         }
-        for (File entry : entries) addEntry(entry);
+        for (File entry : entries) {
+            if (pickerMode && !entry.isDirectory() && !matchesRequestedType(entry)) continue;
+            addEntry(entry);
+        }
     }
 
     private void addEntry(File file) {
@@ -210,6 +217,18 @@ public final class FilesActivity extends Activity {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, dp(62));
         params.bottomMargin = dp(7);
         list.addView(row, params);
+    }
+
+    private boolean matchesRequestedType(File file) {
+        if (requestedMimeType == null || requestedMimeType.equals("*/*")) return true;
+        String extension = MimeTypeMap.getFileExtensionFromUrl(file.getName());
+        String actual = extension == null ? null : MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(extension.toLowerCase(java.util.Locale.ROOT));
+        if (actual == null) return false;
+        if (requestedMimeType.endsWith("/*")) {
+            return actual.startsWith(requestedMimeType.substring(0, requestedMimeType.length() - 1));
+        }
+        return requestedMimeType.equalsIgnoreCase(actual);
     }
 
     private boolean isEditableText(File file) {
@@ -356,7 +375,11 @@ public final class FilesActivity extends Activity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
         if (requestCode == REQUEST_STORAGE) {
-            if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
+            boolean readGranted = checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+            boolean writeGranted = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED;
+            if (readGranted && writeGranted) {
                 showDirectory(currentDirectory);
             } else {
                 addMessage("Storage permission is required to browse device files.");

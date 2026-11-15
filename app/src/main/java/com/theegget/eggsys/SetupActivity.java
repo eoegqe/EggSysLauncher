@@ -40,6 +40,8 @@ public class SetupActivity extends Activity {
     private static final String SETUP_PREFS = "eggsys_setup";
     private static final String SETUP_COMPLETE = "complete";
     private static final String UPTODOWN_DOWNLOAD_ID = "uptodown_download_id";
+    private static final String DEVICE_OWNER_COMMAND =
+            "adb shell dpm set-device-owner com.theegget.eggsys/.EggSysDeviceAdminReceiver";
 
     private static final String[] PRESERVED_PACKAGES = {
             "com.android.systemui",
@@ -133,6 +135,24 @@ public class SetupActivity extends Activity {
 
         addStep("1. EggSys core environment", "Setup, Manager, Settings, Launcher and Recovery are part of this installed EggSys package.");
         addStep("2. Device Owner", deviceOwnerStatus());
+        if (!deviceOwnerReady()) {
+            addStep("Run this command on your computer",
+                    "Connect the phone with USB debugging enabled. Run this command from your computer's terminal. Device Owner must be assigned before adding accounts to Android.");
+            TextView command = new TextView(this);
+            command.setText(DEVICE_OWNER_COMMAND);
+            command.setTextColor(0xFFE8EDFA);
+            command.setTextSize(13);
+            command.setTextIsSelectable(true);
+            command.setPadding(18, 16, 18, 16);
+            command.setBackground(rounded(0xFF101722, 14));
+            LinearLayout.LayoutParams commandParams = new LinearLayout.LayoutParams(-1, -2);
+            commandParams.bottomMargin = 8;
+            content.addView(command, commandParams);
+            Button copyCommand = addButton("Copy ADB command");
+            copyCommand.setOnClickListener(v -> copyDeviceOwnerCommand());
+        } else {
+            addStep("ADB provisioning", "Device Owner is active. EggSys can now configure supported device policies.");
+        }
         addStep("3. Required permissions", permissionStatus());
         addStep("4. Accessibility", isAccessibilityEnabled() ? "Granted" : "Required");
         addStep("5. Overlay access", Settings.canDrawOverlays(this) ? "Granted" : "Required");
@@ -153,8 +173,8 @@ public class SetupActivity extends Activity {
         Button write = addButton("Allow modify system settings");
         write.setOnClickListener(v -> openWriteSettings());
 
-        Button admin = addButton("Open EggSys device administrator");
-        admin.setOnClickListener(v -> requestDeviceAdmin());
+        Button checkOwner = addButton("Recheck Device Owner status");
+        checkOwner.setOnClickListener(v -> refreshSetupState());
 
         Button download = addButton(isUptodownInstalled()
                 ? "Uptodown App Store is installed"
@@ -302,20 +322,16 @@ public class SetupActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
-    private void requestDeviceAdmin() {
-        DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
-        ComponentName admin = new ComponentName(this, EggSysDeviceAdminReceiver.class);
-        if (dpm != null && dpm.isAdminActive(admin)) {
-            status.setText("EggSys device administrator is already active.");
+    private void copyDeviceOwnerCommand() {
+        android.content.ClipboardManager clipboard =
+                (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (clipboard == null) {
+            status.setText("Clipboard is unavailable. Select and copy the command above.");
             return;
         }
-        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin);
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                "EggSys uses device administration for protected system functions.");
-        try {
-            startActivityForResult(intent, 1002);
-        } catch (Exception ignored) {}
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText(
+                "EggSys Device Owner command", DEVICE_OWNER_COMMAND));
+        status.setText("ADB command copied. Run it on your computer, then return here.");
     }
 
     private boolean isUptodownInstalled() {

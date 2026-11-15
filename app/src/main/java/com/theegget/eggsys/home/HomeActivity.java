@@ -428,9 +428,7 @@ public final class HomeActivity extends Activity {
 
         tile.setOnClickListener(v -> {
             Intent launch = new Intent();
-            int separator = activityClass.lastIndexOf('.');
-            String packageName = activityClass.substring(0, separator);
-            launch.setComponent(new ComponentName(packageName, activityClass));
+            launch.setComponent(new ComponentName(getPackageName(), activityClass));
             try {
                 startActivity(launch);
             } catch (Exception ignored) {

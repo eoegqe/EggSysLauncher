@@ -379,51 +379,43 @@ public final class HomeActivity extends Activity {
     private View createSystemTile(String title, String description, String symbol,
                                    String activityClass) {
         LinearLayout tile = new LinearLayout(this);
-        tile.setOrientation(LinearLayout.HORIZONTAL);
-        tile.setGravity(Gravity.CENTER_VERTICAL);
-        tile.setPadding(dp(13), dp(13), dp(10), dp(13));
-        tile.setBackground(rounded(SURFACE, dp(17)));
+        tile.setOrientation(LinearLayout.VERTICAL);
+        tile.setGravity(Gravity.CENTER);
+        tile.setPadding(dp(8), dp(12), dp(8), dp(10));
+        tile.setBackground(rounded(SURFACE, dp(18)));
         tile.setClickable(true);
         tile.setFocusable(true);
 
+        LinearLayout iconHolder = new LinearLayout(this);
+        iconHolder.setGravity(Gravity.CENTER);
+        iconHolder.setBackground(rounded(SURFACE_LIGHT, dp(17)));
         TextView icon = new TextView(this);
         icon.setText(symbol);
         icon.setTextColor(TEXT);
-        icon.setTextSize(19);
+        icon.setTextSize(25);
         icon.setTypeface(Typeface.create("sans-serif-bold", Typeface.NORMAL));
         icon.setGravity(Gravity.CENTER);
-        icon.setBackground(rounded(ACCENT_DARK, dp(13)));
-        tile.addView(icon, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        iconHolder.addView(icon, new LinearLayout.LayoutParams(dp(48), dp(48)));
+        tile.addView(iconHolder, new LinearLayout.LayoutParams(dp(66), dp(66)));
 
-        LinearLayout labels = new LinearLayout(this);
-        labels.setOrientation(LinearLayout.VERTICAL);
-        labels.setPadding(dp(10), 0, 0, 0);
         TextView name = new TextView(this);
         name.setText(title);
         name.setTextColor(TEXT);
-        name.setTextSize(12);
+        name.setTextSize(11);
         name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
-        name.setMaxLines(1);
+        name.setGravity(Gravity.CENTER);
+        name.setMaxLines(2);
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        labels.addView(name);
-        TextView detail = new TextView(this);
-        detail.setText(description);
-        detail.setTextColor(MUTED);
-        detail.setTextSize(9);
-        detail.setMaxLines(2);
-        detail.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        LinearLayout.LayoutParams detailParams = new LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams nameParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        detailParams.topMargin = dp(3);
-        labels.addView(detail, detailParams);
-        tile.addView(labels, new LinearLayout.LayoutParams(0,
-                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        nameParams.topMargin = dp(8);
+        tile.addView(name, nameParams);
 
         GridLayout.LayoutParams params = new GridLayout.LayoutParams();
         params.width = 0;
-        params.height = dp(76);
+        params.height = dp(112);
         params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-        params.setMargins(dp(3), dp(3), dp(3), dp(3));
+        params.setMargins(dp(4), dp(4), dp(4), dp(4));
         tile.setLayoutParams(params);
 
         tile.setOnClickListener(v -> {

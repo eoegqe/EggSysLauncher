@@ -1,6 +1,8 @@
 package com.eggsys.settings;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.media.AudioManager;
@@ -11,6 +13,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends Activity {
     private LinearLayout content;
@@ -144,6 +147,28 @@ public class MainActivity extends Activity {
 
             addSection("About");
             addText("EggSys Settings\nPart of EggSys OS");
+
+            addSection("Device management");
+            DevicePolicyManager dpm = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+            if (dpm != null && dpm.isDeviceOwnerApp(getPackageName())) {
+                addText("EggSys currently manages this device as its Device Owner.");
+                addButton("Remove EggSys Device Owner", v -> new AlertDialog.Builder(this)
+                    .setTitle("Remove Device Owner?")
+                    .setMessage("This will remove EggSys device management privileges. EggSys will remain installed. You can uninstall it afterward using ADB.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Remove", (dialog, which) -> {
+                        try {
+                            dpm.clearDeviceOwnerApp(getPackageName());
+                            Toast.makeText(this, "EggSys Device Owner status removed.", Toast.LENGTH_LONG).show();
+                            showTab("EggSys");
+                        } catch (Exception e) {
+                            Toast.makeText(this, "Could not remove Device Owner: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .show());
+            } else {
+                addText("EggSys is not the Device Owner of this device.");
+            }
         }
     }
 

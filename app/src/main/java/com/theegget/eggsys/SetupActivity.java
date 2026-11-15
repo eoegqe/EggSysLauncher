@@ -74,6 +74,7 @@ public class SetupActivity extends Activity {
     private TextView progress;
     private long downloadId = -1L;
     private BroadcastReceiver downloadReceiver;
+    private int currentPage = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,74 +134,139 @@ public class SetupActivity extends Activity {
     private void refreshSetupState() {
         content.removeAllViews();
 
-        addStep("1. EggSys core environment", "Setup, Manager, Settings, Launcher and Recovery are part of this installed EggSys package.");
-        addStep("2. Device Owner", deviceOwnerStatus());
-        if (!deviceOwnerReady()) {
-            addStep("Prepare your computer",
-                    "Install Android SDK Platform-Tools on your computer first. This package includes ADB, the command-line tool EggSys needs. Download the Windows ZIP, extract the platform-tools folder, and keep it on your computer.");
-            Button platformTools = addButton("Download Android Platform-Tools");
-            platformTools.setOnClickListener(v -> {
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW,
-                            Uri.parse("https://developer.android.com/tools/releases/platform-tools")));
-                } catch (Exception ignored) {
-                    status.setText("Open developer.android.com/tools/releases/platform-tools on your computer.");
+        String[] pageNames = {
+                "Welcome", "Device provisioning", "Permissions",
+                "Accessibility", "Display access", "System settings",
+                "App store", "Final checks"
+        };
+        String[] pageTitles = {
+                "Welcome to EggSys",
+                "Prepare your device",
+                "Set up permissions",
+                "Enable EggSys Manager",
+                "Allow display access",
+                "Allow system changes",
+                "Install your app store",
+                "Ready to finish"
+        };
+        String[] pageDescriptions = {
+                "Let's get your device ready. This guided setup will prepare EggSys and configure the required Android settings. You can move through each step using the buttons below.",
+                "EggSys needs to be set as the Device Owner. Android requires this one-time step to be run from a computer using ADB. It cannot be completed by tapping a button on the phone.",
+                "EggSys requests the Android permissions needed by its built-in features. Android will show its standard permission prompts.",
+                "Turn on the EggSys Manager accessibility service in Android Settings. This allows the system interface features that depend on the service to work.",
+                "Allow EggSys to display over other apps. Android will open its system settings page so you can grant the access.",
+                "Allow EggSys to modify system settings. Android will open the relevant system settings page.",
+                "Install the Uptodown App Store. Android's package installer will handle the installation.",
+                "Review the remaining setup requirements. EggSys will save a restore list before applying the app cleanup."
+        };
+
+        currentPage = Math.max(0, Math.min(currentPage, pageNames.length - 1));
+        addStep("STEP " + (currentPage + 1) + " OF " + pageNames.length + "  •  " + pageNames[currentPage],
+                pageTitles[currentPage] + "\n" + pageDescriptions[currentPage]);
+
+        switch (currentPage) {
+            case 0:
+                addStep("Before you begin",
+                        "Keep this phone charged. For Device Owner provisioning, you will also need a Windows computer, a USB cable, and Android SDK Platform-Tools.");
+                break;
+            case 1:
+                if (deviceOwnerReady()) {
+                    addStep("Device Owner", "Completed — EggSys is the Device Owner.");
+                } else {
+                    addStep("1. Install Android Platform-Tools",
+                            "On your Windows computer, download the official Platform-Tools ZIP and extract it. It contains ADB, which is required for this step.");
+                    Button platformTools = addButton("Download Android Platform-Tools");
+                    platformTools.setOnClickListener(v -> {
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW,
+                                    Uri.parse("https://developer.android.com/tools/releases/platform-tools")));
+                        } catch (Exception ignored) {
+                            status.setText("Open developer.android.com/tools/releases/platform-tools on your computer.");
+                        }
+                    });
+                    addStep("2. Run ADB from your computer",
+                            "Connect the phone by USB and enable USB debugging in Developer options. Accept the USB debugging prompt. On your computer, open the extracted platform-tools folder, click its address bar, type cmd, and press Enter. Type this command in the computer's Command Prompt — not on the phone:");
+                    TextView command = new TextView(this);
+                    command.setText(DEVICE_OWNER_COMMAND);
+                    command.setTextColor(0xFFE8EDFA);
+                    command.setTextSize(13);
+                    command.setTextIsSelectable(true);
+                    command.setPadding(18, 16, 18, 16);
+                    command.setBackground(rounded(0xFF101722, 14));
+                    content.addView(command, new LinearLayout.LayoutParams(-1, -2));
+                    Button checkOwner = addButton("I've run the command — Check again");
+                    checkOwner.setOnClickListener(v -> refreshSetupState());
                 }
-            });
-            addStep("Run Device Owner command from Windows",
-                    "On your computer, connect this phone by USB and enable USB debugging in Developer options. Accept the USB debugging prompt on the phone. Open the extracted platform-tools folder, click its address bar, type cmd, and press Enter. In the Command Prompt window, type the command shown below and press Enter. Do not run this command on the phone.");
-            TextView command = new TextView(this);
-            command.setText(DEVICE_OWNER_COMMAND);
-            command.setTextColor(0xFFE8EDFA);
-            command.setTextSize(13);
-            command.setTextIsSelectable(true);
-            command.setPadding(18, 16, 18, 16);
-            command.setBackground(rounded(0xFF101722, 14));
-            LinearLayout.LayoutParams commandParams = new LinearLayout.LayoutParams(-1, -2);
-            commandParams.bottomMargin = 8;
-            content.addView(command, commandParams);
-            Button checkOwner = addButton("I've run the command — Check again");
-            checkOwner.setOnClickListener(v -> refreshSetupState());
-        } else {
-            addStep("ADB provisioning", "Device Owner is active. EggSys can now configure supported device policies.");
+                break;
+            case 2:
+                addStep("Permission status", permissionStatus());
+                Button permissions = addButton("Grant permissions");
+                permissions.setOnClickListener(v -> requestRequiredPermissions());
+                break;
+            case 3:
+                addStep("Accessibility status", isAccessibilityEnabled() ? "Enabled" : "Not enabled");
+                Button accessibility = addButton("Open Accessibility settings");
+                accessibility.setOnClickListener(v -> openAccessibilitySettings());
+                break;
+            case 4:
+                addStep("Display over other apps", Settings.canDrawOverlays(this) ? "Allowed" : "Not allowed");
+                Button overlay = addButton("Open display access settings");
+                overlay.setOnClickListener(v -> openOverlaySettings());
+                break;
+            case 5:
+                addStep("Modify system settings", canWriteSettings() ? "Allowed" : "Not allowed");
+                Button write = addButton("Open system settings access");
+                write.setOnClickListener(v -> openWriteSettings());
+                break;
+            case 6:
+                addStep("Uptodown App Store", isUptodownInstalled()
+                        ? "Installed" : "Not installed yet");
+                Button download = addButton(isUptodownInstalled()
+                        ? "App store installed" : "Download Uptodown App Store");
+                download.setEnabled(!isUptodownInstalled());
+                download.setOnClickListener(v -> startUptodownDownload());
+                break;
+            case 7:
+                addStep("Device Owner", deviceOwnerReady() ? "Ready" : "Still required");
+                addStep("Permissions", requiredPermissionsGranted() ? "Ready" : "Still required");
+                addStep("Accessibility", isAccessibilityEnabled() ? "Ready" : "Still required");
+                addStep("Display access", Settings.canDrawOverlays(this) ? "Ready" : "Still required");
+                addStep("System settings access", canWriteSettings() ? "Ready" : "Still required");
+                addStep("App store", isUptodownInstalled() ? "Ready" : "Still required");
+                addStep("App restore list", restoreFileExists() ? "Saved" : "Not saved");
+                Button scan = addButton("Create or refresh app restore list");
+                scan.setOnClickListener(v -> scanAndSaveRestoreList());
+                Button finish = addButton("Finish EggSys setup");
+                finish.setEnabled(canFinishSetup());
+                finish.setOnClickListener(v -> finishSetup());
+                break;
         }
-        addStep("3. Required permissions", permissionStatus());
-        addStep("4. Accessibility", isAccessibilityEnabled() ? "Granted" : "Required");
-        addStep("5. Overlay access", Settings.canDrawOverlays(this) ? "Granted" : "Required");
-        addStep("6. Modify system settings", canWriteSettings() ? "Granted" : "Required");
-        addStep("7. Uptodown App Store", isUptodownInstalled() ? "Installed" : "Download required");
-        addStep("8. App restore list", restoreFileExists() ? "Saved" : "Not saved");
-        addStep("9. Android app cleanup", deviceOwnerReady() ? "Ready to process user apps" : "Waiting for Device Owner");
 
-        Button permissions = addButton("Request required Android permissions");
-        permissions.setOnClickListener(v -> requestRequiredPermissions());
-
-        Button accessibility = addButton("Open Accessibility settings");
-        accessibility.setOnClickListener(v -> openAccessibilitySettings());
-
-        Button overlay = addButton("Allow display over other apps");
-        overlay.setOnClickListener(v -> openOverlaySettings());
-
-        Button write = addButton("Allow modify system settings");
-        write.setOnClickListener(v -> openWriteSettings());
-
-        Button download = addButton(isUptodownInstalled()
-                ? "Uptodown App Store is installed"
-                : "Download Uptodown App Store");
-        download.setEnabled(!isUptodownInstalled());
-        download.setOnClickListener(v -> startUptodownDownload());
-
-        Button scan = addButton("Scan enabled Android apps and save restore list");
-        scan.setOnClickListener(v -> scanAndSaveRestoreList());
-
-        Button finish = addButton("Finish EggSysOS Setup");
-        finish.setOnClickListener(v -> finishSetup());
-        finish.setEnabled(canFinishSetup());
-
-        progress.setText(buildProgressText());
+        progress.setText("Setup  •  " + (currentPage + 1) + " / " + pageNames.length);
         status.setText(canFinishSetup()
-                ? "Setup requirements are ready."
-                : "Complete the required setup steps above.");
+                ? "All required setup checks are complete."
+                : "Complete each required step to continue.");
+
+        LinearLayout navigation = new LinearLayout(this);
+        navigation.setOrientation(LinearLayout.HORIZONTAL);
+        navigation.setGravity(Gravity.CENTER_VERTICAL);
+        if (currentPage > 0) {
+            Button back = addButton("Back");
+            back.setOnClickListener(v -> {
+                currentPage--;
+                refreshSetupState();
+            });
+            navigation.addView(back, new LinearLayout.LayoutParams(0, -2, 1));
+        }
+        if (currentPage < pageNames.length - 1) {
+            Button next = addButton(currentPage == 0 ? "Get started" : "Continue");
+            next.setOnClickListener(v -> {
+                currentPage++;
+                refreshSetupState();
+            });
+            navigation.addView(next, new LinearLayout.LayoutParams(0, -2, 1));
+        }
+        content.addView(navigation);
     }
 
     private void addStep(String title, String state) {

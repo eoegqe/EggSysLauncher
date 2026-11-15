@@ -80,7 +80,7 @@ public final class FilesActivity extends Activity {
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
         TextView title = new TextView(this);
-        title.setText("Files");
+        title.setText("EggSys Files");
         title.setTextColor(TEXT);
         title.setTextSize(28);
         title.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
@@ -121,7 +121,7 @@ public final class FilesActivity extends Activity {
         root.addView(parent, parentParams);
 
         Button systemFiles = new Button(this);
-        systemFiles.setText("Default file manager");
+        systemFiles.setText("Hide / restore default file manager");
         systemFiles.setAllCaps(false);
         systemFiles.setTextColor(MUTED);
         systemFiles.setBackground(round(SURFACE, dp(16)));

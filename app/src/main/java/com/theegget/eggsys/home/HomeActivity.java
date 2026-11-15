@@ -177,6 +177,40 @@ public final class HomeActivity extends Activity {
         searchContainer.addView(searchField, new LinearLayout.LayoutParams(0,
                 ViewGroup.LayoutParams.MATCH_PARENT, 1f));
 
+        TextView systemTitle = new TextView(this);
+        systemTitle.setText("EggSys System Apps");
+        systemTitle.setTextColor(TEXT);
+        systemTitle.setTextSize(18);
+        systemTitle.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        LinearLayout.LayoutParams systemTitleParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        systemTitleParams.topMargin = dp(24);
+        root.addView(systemTitle, systemTitleParams);
+
+        TextView systemHint = new TextView(this);
+        systemHint.setText("Built into your EggSys environment");
+        systemHint.setTextColor(MUTED);
+        systemHint.setTextSize(11);
+        LinearLayout.LayoutParams systemHintParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        systemHintParams.topMargin = dp(4);
+        systemHintParams.bottomMargin = dp(11);
+        root.addView(systemHint, systemHintParams);
+
+        GridLayout systemGrid = new GridLayout(this);
+        systemGrid.setColumnCount(2);
+        systemGrid.setUseDefaultMargins(false);
+        systemGrid.addView(createSystemTile("EggSys Settings", "Personalize your device", "S",
+                "com.eggsys.settings.MainActivity"));
+        systemGrid.addView(createSystemTile("EggSys Manager", "Manage EggSys features", "M",
+                "com.theegget.eggsys.ManagerActivity"));
+        systemGrid.addView(createSystemTile("Boot Settings", "Startup and boot options", "B",
+                "com.theegget.eggsys.bootsettings.MainActivity"));
+        systemGrid.addView(createSystemTile("EggSys Setup", "Setup and recovery options", "E",
+                "com.theegget.eggsys.SetupActivity"));
+        root.addView(systemGrid, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         TextView sectionTitle = new TextView(this);
         sectionTitle.setText("Applications");
         sectionTitle.setTextColor(TEXT);
@@ -336,6 +370,67 @@ public final class HomeActivity extends Activity {
             if (launch != null) {
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(launch);
+            }
+        });
+        return tile;
+    }
+
+    private View createSystemTile(String title, String description, String symbol,
+                                   String activityClass) {
+        LinearLayout tile = new LinearLayout(this);
+        tile.setOrientation(LinearLayout.HORIZONTAL);
+        tile.setGravity(Gravity.CENTER_VERTICAL);
+        tile.setPadding(dp(13), dp(13), dp(10), dp(13));
+        tile.setBackground(rounded(SURFACE, dp(17)));
+        tile.setClickable(true);
+        tile.setFocusable(true);
+
+        TextView icon = new TextView(this);
+        icon.setText(symbol);
+        icon.setTextColor(TEXT);
+        icon.setTextSize(19);
+        icon.setTypeface(Typeface.create("sans-serif-bold", Typeface.NORMAL));
+        icon.setGravity(Gravity.CENTER);
+        icon.setBackground(rounded(ACCENT_DARK, dp(13)));
+        tile.addView(icon, new LinearLayout.LayoutParams(dp(42), dp(42)));
+
+        LinearLayout labels = new LinearLayout(this);
+        labels.setOrientation(LinearLayout.VERTICAL);
+        labels.setPadding(dp(10), 0, 0, 0);
+        TextView name = new TextView(this);
+        name.setText(title);
+        name.setTextColor(TEXT);
+        name.setTextSize(12);
+        name.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));
+        name.setMaxLines(1);
+        name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        labels.addView(name);
+        TextView detail = new TextView(this);
+        detail.setText(description);
+        detail.setTextColor(MUTED);
+        detail.setTextSize(9);
+        detail.setMaxLines(2);
+        detail.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams detailParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        detailParams.topMargin = dp(3);
+        labels.addView(detail, detailParams);
+        tile.addView(labels, new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+        params.width = 0;
+        params.height = dp(76);
+        params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+        params.setMargins(dp(3), dp(3), dp(3), dp(3));
+        tile.setLayoutParams(params);
+
+        tile.setOnClickListener(v -> {
+            Intent launch = new Intent();
+            launch.setClassName(getPackageName(), activityClass);
+            try {
+                startActivity(launch);
+            } catch (Exception ignored) {
             }
         });
         return tile;

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">EggSys OS</string>
+    <string name="app_name">EggSys Launcher</string>
     <string name="mode1_name">EggetSystem</string>
     <string name="accessibility_service_description">Monitors apps for EggSys blocking and can close blocked apps through Android Settings.</string>
     <string name="keyboard_name">EggSys Keyboard</string>

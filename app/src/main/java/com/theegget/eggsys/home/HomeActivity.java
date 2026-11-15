@@ -131,6 +131,8 @@ public final class HomeActivity extends Activity {
                 "com.eggsys.settings.MainActivity"));
         systemGrid.addView(createSystemTile("EggSys Manager", "", "M",
                 "com.theegget.eggsys.ManagerActivity"));
+        systemGrid.addView(createSystemTile("EggSys Files", "", "F",
+                "com.theegget.eggsys.files.FilesActivity"));
         LinearLayout.LayoutParams systemGridParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         systemGridParams.bottomMargin = dp(10);

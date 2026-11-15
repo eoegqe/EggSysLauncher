@@ -117,7 +117,6 @@ public class MainActivity extends Activity {
             addText("Direct system controls are available here instead of sending you to Android Settings.");
 
             addButton("Date & Time", v -> openSettings(Settings.ACTION_DATE_SETTINGS));
-            addButton("Open Boot Menu", v -> openBootSettings());
 
             addSection("Modify System Settings");
             addText(Settings.System.canWrite(this)
@@ -143,7 +142,6 @@ public class MainActivity extends Activity {
             addSection("EggSys");
             addButton("EggSys Manager", v -> openManager());
             addButton("EggSys Keyboard", v -> openKeyboardSettings());
-            addButton("Open Boot Settings", v -> openBootSettings());
 
             addSection("About");
             addText("EggSys Settings\nPart of EggSys OS");
@@ -230,14 +228,6 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) {}
     }
 
-    private void openBootSettings() {
-        Intent intent = new Intent();
-        intent.setComponent(new ComponentName(
-            "com.theegget.eggsys.bootsettings",
-            "com.theegget.eggsys.bootsettings.MainActivity"
-        ));
-        try { startActivity(intent); } catch (Exception ignored) {}
-    }
 
     private void openManager() {
         Intent intent = new Intent();

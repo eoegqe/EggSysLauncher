@@ -521,7 +521,7 @@ public class SetupActivity extends Activity {
 
         BootState.reset(this);
 
-        Intent intent = new Intent(this, NativeLauncherActivity.class);
+        Intent intent = new Intent(this, com.theegget.eggsys.home.HomeActivity.class);
         startActivity(intent);
         finish();
     }

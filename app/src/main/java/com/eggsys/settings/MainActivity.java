@@ -242,7 +242,7 @@ public class MainActivity extends Activity {
         new Thread(() -> {
             HttpURLConnection connection = null;
             try {
-                URL url = new URL("https://api.github.com/repos/eoegqe/EggSysLauncher/releases/latest");
+                URL url = new URL("https://api.github.com/repos/eoegqe/EggSysLauncher/releases?per_page=1");
                 connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
                 connection.setConnectTimeout(15000);
@@ -267,7 +267,14 @@ public class MainActivity extends Activity {
                 while ((line = reader.readLine()) != null) body.append(line);
                 reader.close();
 
-                JSONObject release = new JSONObject(body.toString());
+                JSONArray releases = new JSONArray(body.toString());
+                if (releases.length() == 0) {
+                    runOnUiThread(() -> showUpdateMessage("No EggSys releases yet",
+                            "GitHub does not have any published EggSys releases. Once an APK is attached to a GitHub Release, it will appear here."));
+                    return;
+                }
+
+                JSONObject release = releases.getJSONObject(0);
                 String tag = release.optString("tag_name", "Unknown");
                 String title = release.optString("name", tag);
                 String notes = release.optString("body", "No release notes were provided.");
